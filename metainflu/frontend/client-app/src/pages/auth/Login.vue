@@ -18,14 +18,14 @@
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <label for="mobile" class="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
           <input
-            id="email"
-            v-model="form.email"
-            type="email"
+            id="mobile"
+            v-model="form.mobile"
+            type="tel"
             required
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="your@email.com"
+            placeholder="Enter your mobile number"
           />
         </div>
 
@@ -58,6 +58,8 @@
             </button>
           </div>
         </div>
+
+
 
         <button
           type="submit"
@@ -93,7 +95,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const form = ref({
-  email: '',
+  mobile: '',
   password: ''
 })
 
