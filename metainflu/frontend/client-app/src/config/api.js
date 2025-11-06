@@ -42,19 +42,46 @@ export const apiClient = {
     
     try {
       console.log(`API Request: ${options.method || 'GET'} ${url}`);
+      if (options.body) {
+        console.log('Request body:', JSON.parse(options.body));
+      }
+      
       const response = await fetch(url, config);
       
       if (!response.ok) {
+        let errorData = null;
         let errorMessage = `HTTP ${response.status}`;
+        
         try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+          errorData = await response.json();
+          console.error(`API Error ${response.status}:`, errorData);
+          
+          // Extract error message from various possible formats
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.errors && Array.isArray(errorData.errors)) {
+            errorMessage = errorData.errors.map(e => e.msg || e.message).join(', ');
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
         } catch (e) {
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
+          // If JSON parsing fails, try to get text
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+            console.error(`API Error ${response.status}:`, errorText);
+          } catch (textError) {
+            console.error(`API Error ${response.status}: Could not parse error response`);
+          }
         }
-        console.error(`API Error ${response.status}:`, errorMessage);
-        throw new Error(errorMessage);
+        
+        // Create error object with response for better error handling
+        const error = new Error(errorMessage);
+        error.response = {
+          status: response.status,
+          data: errorData
+        };
+        throw error;
       }
       
       // Handle responses with no content
@@ -67,11 +94,14 @@ export const apiClient = {
       return data;
       
     } catch (error) {
-      console.error('API request failed:', {
-        url,
-        error: error.message,
-        options
-      });
+      // If error doesn't have response property, it's a network error
+      if (!error.response) {
+        console.error('Network error:', {
+          url,
+          error: error.message,
+          options
+        });
+      }
       throw error;
     }
   },
