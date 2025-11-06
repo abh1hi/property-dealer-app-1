@@ -1,92 +1,118 @@
 <template>
-  <div id="app">
-    <Navbar />
+  <div id="app" class="min-h-screen bg-gray-50">
+    <!-- Show navbar on all pages except auth -->
+    <Navbar v-if="!isAuthPage" />
     
-    <main class="main-content">
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+    <!-- Main content -->
+    <main class="flex-1" :class="{ 'pb-16': !isAuthPage && isMobile }">
+      <router-view />
     </main>
-
-    <BottomNav />
+    
+    <!-- Footer (hide on mobile for better UX) -->
+    <Footer v-if="!isAuthPage && !isMobile" />
+    
+    <!-- Bottom navigation for mobile -->
+    <BottomNav v-if="!isAuthPage && isMobile" />
   </div>
 </template>
 
 <script setup>
-import Navbar from './components/Navbar.vue';
-import BottomNav from './components/BottomNav.vue';
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
+import { createPinia } from 'pinia'
+import Navbar from '@/components/Navbar.vue'
+import Footer from '@/components/Footer.vue'
+import BottomNav from '@/components/BottomNav.vue'
+
+const route = useRoute()
+const authStore = useAuthStore()
+const isMobile = ref(false)
+
+const isAuthPage = computed(() => {
+  return route.path.startsWith('/auth')
+})
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  // Check authentication on app load
+  authStore.checkAuth()
+  
+  // Check mobile status
+  checkMobile()
+  
+  // Listen for resize events
+  window.addEventListener('resize', checkMobile)
+})
 </script>
 
 <style>
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 /* Global styles */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-
-:root {
-  /* Modern mobile-first colors */
-  --primary: #1a1a1a;
-  --secondary: #64748b;
-  --accent: #c19a6b;
-  --background: #ffffff;
-  --surface: #f8fafc;
-  --border: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-}
-
-/* CSS Reset and Base Styles */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+body {
+  font-family: 'Inter', system-ui, sans-serif;
   margin: 0;
   padding: 0;
 }
 
-html {
-  height: 100%;
-  scroll-behavior: smooth;
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-body {
-  height: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--background);
-  color: var(--text-primary);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
 }
 
-/* App Layout */
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 
-/* Main Content */
-.main-content {
-  flex-grow: 1;
-  padding-top: 5rem; /* Corresponds to h-20 in Navbar */
-  /* Add padding to the bottom on mobile to account for BottomNav */
-  padding-bottom: 5rem; /* Corresponds to h-16 in BottomNav + extra space */
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-@media (min-width: 1024px) { /* lg breakpoint */
-  .main-content {
-    padding-bottom: 0; /* No bottom padding on desktop */
-  }
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
 }
 
-/* Transitions */
+/* Utility classes */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Smooth transitions */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s;
 }
 
 .fade-enter-from,
@@ -94,45 +120,14 @@ body {
   opacity: 0;
 }
 
-/* Scrollbar styling for webkit browsers */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--surface);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--secondary);
-}
-
-/* Focus styles for accessibility */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary: #ffffff;
-    --secondary: #94a3b8;
-    --background: #0f172a;
-    --surface: #1e293b;
-    --border: #334155;
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #64748b;
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 2.5rem;
+  }
+  
+  .category-card {
+    margin-bottom: 1rem;
   }
 }
 </style>
