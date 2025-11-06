@@ -1,9 +1,3 @@
-/*
-  File: metainflu/backend/controllers/authController.js
-  Purpose: This file handles user registration and login logic. It exports
-  the registerUser, loginUser, and loginAdmin functions. The error was likely
-  caused by this file not correctly exporting loginAdmin. This version ensures it is.
-*/
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
@@ -17,36 +11,49 @@ const generateToken = (id) => {
   });
 };
 
-// Handles new user registration.
+// Generate a 6-digit OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Send OTP (dummy function for now)
+const sendOTP = async (mobile, otp) => {
+  console.log(`Sending OTP ${otp} to ${mobile}`);
+  // TODO: Integrate with an actual SMS gateway like Twilio or MessageBird
+};
+
+// @desc    Register user with mobile + Aadhaar
+// @route   POST /api/auth/register
+// @access  Public
 const registerUser = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, email, password } = req.body;
+  const { name, mobile, aadhaar } = req.body;
 
-  const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ mobile });
   if (userExists) {
     res.status(400);
     throw new Error('User already exists');
   }
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  // Default role is 'user' as defined in the User model.
+
+  const otp = generateOTP();
+  await sendOTP(mobile, otp);
+
   const user = await User.create({
     name,
-    email,
-    password: hashedPassword,
+    mobile,
+    aadhaar,
+    otp,
+    otpExpires: Date.now() + 10 * 60 * 1000, // OTP valid for 10 minutes
   });
+
   if (user) {
-    // Return user info, including role, and a token.
     res.status(201).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
+      message: 'OTP sent to mobile number',
+      userId: user._id,
     });
   } else {
     res.status(400);
@@ -54,100 +61,62 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Handles general user login.
+// @desc    Login with OTP verification
+// @route   POST /api/auth/login
+// @access  Public
 const loginUser = asyncHandler(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+  const { mobile } = req.body;
+
+  const user = await User.findOne({ mobile });
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
   }
 
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (user && (await bcrypt.compare(password, user.password))) {
-    // Return user info, including role, and a token.
-    res.json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
-    });
-  } else {
+  const otp = generateOTP();
+  await sendOTP(mobile, otp);
+
+  user.otp = otp;
+  user.otpExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+  await user.save();
+
+  res.status(200).json({ message: 'OTP sent to mobile number', userId: user._id });
+});
+
+// @desc    OTP verification
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOTP = asyncHandler(async (req, res) => {
+  const { userId, otp } = req.body;
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  if (user.otp !== otp || user.otpExpires < Date.now()) {
     res.status(400);
-    throw new Error('Invalid credentials');
+    throw new Error('Invalid or expired OTP');
   }
-});
 
-// Handles admin-specific login.
-const loginAdmin = asyncHandler(async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+  user.otp = undefined;
+  user.otpExpires = undefined;
+  await user.save();
 
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-
-    // Check if user exists, password is correct, AND user has 'admin' role.
-    if (user && (await bcrypt.compare(password, user.password))) {
-        if (user.role !== 'admin') {
-            res.status(403); // Forbidden
-            throw new Error('Not authorized as an admin');
-        }
-        res.json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            token: generateToken(user._id),
-        });
-    } else {
-        res.status(401); // Unauthorized
-        throw new Error('Invalid credentials');
-    }
-});
-
-
-// Handles vendor-specific login.
-const loginVendor = asyncHandler(async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) {
-        res.status(401);
-        throw new Error('Invalid credentials');
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-        res.status(401);
-        throw new Error('Invalid credentials');
-    }
-
-    if (user.role !== 'vendor') {
-        res.status(403);
-        throw new Error('Not authorized as a vendor');
-    }
-
-    res.json({
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token: generateToken(user._id),
-    });
+  res.json({
+    _id: user.id,
+    name: user.name,
+    mobile: user.mobile,
+    aadhaar: user.aadhaar,
+    token: generateToken(user._id),
+  });
 });
 
 module.exports = {
   registerUser,
   loginUser,
-  loginAdmin, // This line is crucial and ensures loginAdmin is exported.
-  loginVendor,
+  verifyOTP,
 };
-

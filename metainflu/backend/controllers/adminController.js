@@ -1,83 +1,65 @@
-/*
-  File: metainflu/backend/controllers/adminController.js
-  Purpose: This file contains the controller functions for admin-specific actions.
-  It handles the logic for fetching all users from the database.
-*/
 const User = require('../models/User');
-const Category = require('../models/Category');
+const Property = require('../models/Property');
 const asyncHandler = require('express-async-handler');
 
 // @desc    Get all users
 // @route   GET /api/admin/users
 // @access  Private/Admin
 const getUsers = asyncHandler(async (req, res) => {
-  // Find all users and exclude their passwords from the result.
   const users = await User.find({}).select('-password');
   res.json(users);
 });
 
-// @desc    Get all users for admin with pagination
-// @route   GET /api/admin/users
+// @desc    Get all properties (pending/approved)
+// @route   GET /api/admin/properties
 // @access  Private/Admin
-const getUsersAdmin = asyncHandler(async (req, res) => {
-  const pageSize = 10;
-  const page = Number(req.query.pageNumber) || 1;
+const getAdminProperties = asyncHandler(async (req, res) => {
+  const { status } = req.query;
+  let filter = {};
 
-  const count = await User.countDocuments({ role: 'user' }); // Only count customers
-  const users = await User.find({ role: 'user' })
-    .select('-password')
-    .limit(pageSize)
-    .skip(pageSize * (page - 1));
+  if (status) {
+    filter.status = status;
+  }
 
-  res.json({ users, page, pages: Math.ceil(count / pageSize) });
+  const properties = await Property.find(filter).populate('user', 'name mobile');
+  res.json(properties);
 });
 
-// @desc    Get all pending categories
-// @route   GET /api/admin/categories/pending
+// @desc    Admin: Approve property
+// @route   PUT /api/admin/properties/:id/approve
 // @access  Private/Admin
-const getPendingCategories = asyncHandler(async (req, res) => {
-  const categories = await Category.find({ status: 'pending' });
-  res.json(categories);
-});
+const approveProperty = asyncHandler(async (req, res) => {
+  const property = await Property.findById(req.params.id);
 
-// @desc    Approve a category
-// @route   PUT /api/admin/categories/:id/approve
-// @access  Private/Admin
-const approveCategory = asyncHandler(async (req, res) => {
-  const category = await Category.findById(req.params.id);
-
-  if (category) {
-    category.status = 'approved';
-    const updatedCategory = await category.save();
-    res.json(updatedCategory);
+  if (property) {
+    property.status = 'approved';
+    const updatedProperty = await property.save();
+    res.json(updatedProperty);
   } else {
     res.status(404);
-    throw new Error('Category not found');
+    throw new Error('Property not found');
   }
 });
 
-// @desc    Reject (delete) a category
-// @route   DELETE /api/admin/categories/:id
+// @desc    Admin: Reject property
+// @route   PUT /api/admin/properties/:id/reject
 // @access  Private/Admin
-const rejectCategory = asyncHandler(async (req, res) => {
-  const category = await Category.findById(req.params.id);
+const rejectProperty = asyncHandler(async (req, res) => {
+  const property = await Property.findById(req.params.id);
 
-  if (category) {
-    // Optional: Before deleting, you might want to handle products that are using this category.
-    // For now, we'll just delete the category.
-    await category.deleteOne();
-    res.json({ message: 'Category rejected and removed' });
+  if (property) {
+    property.status = 'rejected';
+    const updatedProperty = await property.save();
+    res.json(updatedProperty);
   } else {
     res.status(404);
-    throw new Error('Category not found');
+    throw new Error('Property not found');
   }
 });
-
 
 module.exports = {
   getUsers,
-  getPendingCategories,
-  approveCategory,
-  rejectCategory,
-  getUsersAdmin,
+  getAdminProperties,
+  approveProperty,
+  rejectProperty,
 };

@@ -3,15 +3,14 @@ const { body } = require('express-validator');
 const registerValidationRules = () => {
   return [
     body('name').notEmpty().withMessage('Name is required').trim().escape(),
-    body('email').isEmail().withMessage('Please include a valid email').normalizeEmail(),
-    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+    body('mobile').isMobilePhone('any').withMessage('Please include a valid mobile number'),
+    body('aadhaar').isLength({ min: 12, max: 12 }).withMessage('Aadhaar must be 12 digits long').optional({ checkFalsy: true }),
   ];
 };
 
 const loginValidationRules = () => {
   return [
-    body('email').isEmail().withMessage('Please include a valid email').normalizeEmail(),
-    body('password').notEmpty().withMessage('Password is required'),
+    body('mobile').isMobilePhone('any').withMessage('Please include a valid mobile number'),
   ];
 };
 
