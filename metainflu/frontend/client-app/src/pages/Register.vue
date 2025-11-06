@@ -3,25 +3,80 @@
     <div class="auth-container">
       <div class="text-center">
         <h1 class="auth-title text-gray-900">Create Account</h1>
-        <p class="auth-subtitle text-gray-600">Join AURA to enjoy a seamless shopping experience.</p>
+        <p class="auth-subtitle text-gray-600">
+          {{ showOTP ? 'Enter the OTP sent to your mobile' : 'Sign up with your mobile number' }}
+        </p>
       </div>
-      <form class="auth-form" @submit.prevent="handleRegister">
+
+      <!-- Registration Form -->
+      <form v-if="!showOTP" class="auth-form" @submit.prevent="handleRegister">
         <div class="form-group">
-          <label for="name" class="sr-only">Name</label>
-          <input id="name" name="name" type="text" autocomplete="name" required v-model="name" placeholder="Name" class="auth-input">
+          <label for="name" class="sr-only">Full Name</label>
+          <input
+            id="name"
+            v-model="formData.name"
+            type="text"
+            required
+            placeholder="Full Name"
+            class="auth-input"
+            :class="{ 'input-error': error }"
+          />
         </div>
+
         <div class="form-group">
-          <label for="email" class="sr-only">Email</label>
-          <input id="email" name="email" type="email" autocomplete="email" required v-model="email" placeholder="Email" class="auth-input">
+          <label for="mobile" class="sr-only">Mobile Number</label>
+          <input
+            id="mobile"
+            v-model="formData.mobile"
+            type="tel"
+            inputmode="numeric"
+            maxlength="10"
+            required
+            placeholder="Mobile Number (10 digits)"
+            class="auth-input"
+            :class="{ 'input-error': error }"
+          />
         </div>
+
         <div class="form-group">
-          <label for="password" class="sr-only">Password</label>
-          <input id="password" name="password" type="password" autocomplete="new-password" required v-model="password" placeholder="Password" class="auth-input">
+          <label for="aadhaar" class="sr-only">Aadhaar Number (Optional)</label>
+          <input
+            id="aadhaar"
+            v-model="formData.aadhaar"
+            type="tel"
+            inputmode="numeric"
+            maxlength="12"
+            placeholder="Aadhaar Number (Optional, 12 digits)"
+            class="auth-input"
+            :class="{ 'input-error': error }"
+          />
         </div>
-        <button type="submit" class="auth-button">Create Account</button>
+
+        <p v-if="error" class="error-message">{{ error }}</p>
+
+        <button 
+          type="submit" 
+          :disabled="isLoading"
+          class="auth-button"
+          :class="{ 'button-loading': isLoading }"
+        >
+          <span v-if="!isLoading">Send OTP</span>
+          <span v-else>Sending...</span>
+        </button>
       </form>
+
+      <!-- OTP Verification -->
+      <OTPVerification
+        v-else
+        :mobile="formData.mobile"
+        :user-id="userId"
+        @verify="handleVerifyOTP"
+        @resend="handleRegister"
+      />
+
       <p class="switch-auth-text">
-        Already have an account? <router-link to="/login" class="switch-auth-link">Sign in</router-link>
+        Already have an account? 
+        <router-link to="/login" class="switch-auth-link">Sign in</router-link>
       </p>
     </div>
   </div>
@@ -29,39 +84,91 @@
 
 <script>
 import authService from '../services/authService';
+import OTPVerification from '../components/OTPVerification.vue';
 import { useRouter } from 'vue-router';
 
 export default {
   name: 'Register',
+  components: {
+    OTPVerification
+  },
   setup() {
     const router = useRouter();
     return { router };
   },
   data() {
     return {
-      name: '',
-      email: '',
-      password: '',
+      formData: {
+        name: '',
+        mobile: '',
+        aadhaar: '',
+      },
+      userId: '',
+      showOTP: false,
+      error: '',
+      isLoading: false,
     };
   },
   methods: {
     async handleRegister() {
+      // Validate inputs
+      if (!this.formData.name || this.formData.name.trim() === '') {
+        this.error = 'Please enter your full name';
+        return;
+      }
+
+      const mobileRegex = /^[0-9]{10}$/;
+      if (!this.formData.mobile || !mobileRegex.test(this.formData.mobile)) {
+        this.error = 'Please enter a valid 10-digit mobile number';
+        return;
+      }
+
+      // Validate Aadhaar if provided
+      if (this.formData.aadhaar && this.formData.aadhaar.trim() !== '') {
+        const aadhaarRegex = /^[0-9]{12}$/;
+        if (!aadhaarRegex.test(this.formData.aadhaar)) {
+          this.error = 'Aadhaar must be exactly 12 digits';
+          return;
+        }
+      }
+
+      this.error = '';
+      this.isLoading = true;
+
       try {
         const userData = {
-          name: this.name,
-          email: this.email,
-          password: this.password,
+          name: this.formData.name.trim(),
+          mobile: this.formData.mobile.trim(),
         };
 
-        await authService.register(userData);
+        // Only include aadhaar if provided
+        if (this.formData.aadhaar && this.formData.aadhaar.trim() !== '') {
+          userData.aadhaar = this.formData.aadhaar.trim();
+        }
+
+        const response = await authService.register(userData);
+        this.userId = response.userId;
+        this.showOTP = true;
+        this.error = '';
+      } catch (err) {
+        console.error('Registration error:', err);
+        this.error = err.message || 'Failed to register. Please try again.';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async handleVerifyOTP(otp) {
+      this.error = '';
+
+      try {
+        const response = await authService.verifyOTP(this.userId, otp);
         
-        
-        // Redirect to login page after successful registration
-        this.router.push('/login');
-        
-      } catch (error) {
-        
-        // Here you could add logic to show an error message to the user
+        // Redirect to home page after successful registration
+        this.router.push('/');
+      } catch (err) {
+        console.error('OTP verification error:', err);
+        throw new Error(err.message || 'Invalid OTP. Please try again.');
       }
     },
   },
@@ -79,7 +186,7 @@ export default {
 
 .auth-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
   padding: 2.5rem;
   background-color: #ffffff;
   border-radius: 24px;
@@ -95,6 +202,7 @@ export default {
 .auth-subtitle {
   margin-top: 0.5rem;
   font-size: 1rem;
+  line-height: 1.5;
 }
 
 .auth-form {
@@ -116,8 +224,19 @@ export default {
 
 .auth-input:focus {
   outline: none;
-  border-color: #a78bfa;
-  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.input-error {
+  border-color: #ef4444;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .auth-button {
@@ -130,12 +249,21 @@ export default {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  margin-top: 1rem;
+  transition: all 0.2s ease-in-out;
 }
 
-.auth-button:hover {
+.auth-button:hover:not(:disabled) {
   background-color: #7c3aed;
+  transform: translateY(-1px);
+}
+
+.auth-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-loading {
+  opacity: 0.7;
 }
 
 .switch-auth-text {

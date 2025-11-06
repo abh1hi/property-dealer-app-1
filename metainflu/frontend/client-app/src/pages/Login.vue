@@ -3,24 +3,53 @@
     <div class="auth-container">
       <div class="text-center">
         <h1 class="auth-title text-gray-900">Welcome Back</h1>
-        <p class="auth-subtitle text-gray-600">Sign in to your account to continue.</p>
+        <p class="auth-subtitle text-gray-600">
+          {{ showOTP ? 'Enter the OTP sent to your mobile' : 'Sign in with your mobile number' }}
+        </p>
       </div>
-      <form class="auth-form" @submit.prevent="handleLogin">
+
+      <!-- Mobile Number Form -->
+      <form v-if="!showOTP" class="auth-form" @submit.prevent="handleSendOTP">
         <div class="form-group">
-          <label for="email" class="sr-only">Email</label>
-          <input id="email" name="email" type="email" autocomplete="email" required v-model="email" placeholder="Email" class="auth-input">
+          <label for="mobile" class="sr-only">Mobile Number</label>
+          <input
+            id="mobile"
+            v-model="mobile"
+            type="tel"
+            inputmode="numeric"
+            maxlength="10"
+            required
+            placeholder="Mobile Number (10 digits)"
+            class="auth-input"
+            :class="{ 'input-error': error }"
+          />
         </div>
-        <div class="form-group">
-          <label for="password" class="sr-only">Password</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" required v-model="password" placeholder="Password" class="auth-input">
-        </div>
-        <div class="form-options">
-          <router-link to="/forgot-password" class="forgot-password-link">Forgot password?</router-link>
-        </div>
-        <button type="submit" class="auth-button">Sign In</button>
+
+        <p v-if="error" class="error-message">{{ error }}</p>
+
+        <button 
+          type="submit" 
+          :disabled="isLoading"
+          class="auth-button"
+          :class="{ 'button-loading': isLoading }"
+        >
+          <span v-if="!isLoading">Send OTP</span>
+          <span v-else>Sending...</span>
+        </button>
       </form>
+
+      <!-- OTP Verification -->
+      <OTPVerification
+        v-else
+        :mobile="mobile"
+        :user-id="userId"
+        @verify="handleVerifyOTP"
+        @resend="handleSendOTP"
+      />
+
       <p class="switch-auth-text">
-        Don't have an account? <router-link to="/register" class="switch-auth-link">Create one</router-link>
+        Don't have an account? 
+        <router-link to="/register" class="switch-auth-link">Create one</router-link>
       </p>
     </div>
   </div>
@@ -28,48 +57,65 @@
 
 <script>
 import authService from '../services/authService';
-import { globalState } from '../main.js';
+import OTPVerification from '../components/OTPVerification.vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useAuth } from '../composables/useAuth';
 
 export default {
   name: 'Login',
+  components: {
+    OTPVerification
+  },
   setup() {
     const router = useRouter();
     const route = useRoute();
-    const { setToken } = useAuth();
-    return { router, route, setToken };
+    return { router, route };
   },
   data() {
     return {
-      email: '',
-      password: '',
+      mobile: '',
+      userId: '',
+      showOTP: false,
+      error: '',
+      isLoading: false,
     };
   },
   methods: {
-    async handleLogin() {
+    async handleSendOTP() {
+      // Validate mobile number
+      const mobileRegex = /^[0-9]{10}$/;
+      if (!this.mobile || !mobileRegex.test(this.mobile)) {
+        this.error = 'Please enter a valid 10-digit mobile number';
+        return;
+      }
+
+      this.error = '';
+      this.isLoading = true;
+
       try {
-        const userData = {
-          email: this.email,
-          password: this.password,
-        };
-        const response = await authService.login(userData);
+        const response = await authService.login(this.mobile);
+        this.userId = response.userId;
+        this.showOTP = true;
+        this.error = '';
+      } catch (err) {
+        console.error('Login error:', err);
+        this.error = err.message || 'Failed to send OTP. Please try again.';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async handleVerifyOTP(otp) {
+      this.error = '';
+
+      try {
+        const response = await authService.verifyOTP(this.userId, otp);
         
-        this.setToken(response.token);
-        
-        globalState.isLoggedIn = true;
-        globalState.user = {
-            _id: response._id,
-            name: response.name,
-            email: response.email,
-            role: response.role,
-        };
-        
+        // Redirect to home or intended page
         const redirect = this.route.query.redirect || '/';
         this.router.push(redirect);
-      } catch (error) {
-        
-        // Here you could add logic to show an error message to the user
+      } catch (err) {
+        console.error('OTP verification error:', err);
+        throw new Error(err.message || 'Invalid OTP. Please try again.');
       }
     },
   },
@@ -87,7 +133,7 @@ export default {
 
 .auth-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
   padding: 2.5rem;
   background-color: #ffffff;
   border-radius: 24px;
@@ -103,6 +149,7 @@ export default {
 .auth-subtitle {
   margin-top: 0.5rem;
   font-size: 1rem;
+  line-height: 1.5;
 }
 
 .auth-form {
@@ -124,24 +171,19 @@ export default {
 
 .auth-input:focus {
   outline: none;
-  border-color: #a78bfa;
-  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
-.form-options {
-  text-align: right;
-  margin-bottom: 1.5rem;
+.input-error {
+  border-color: #ef4444;
 }
 
-.forgot-password-link {
-  color: #a78bfa;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s ease-in-out;
-}
-
-.forgot-password-link:hover {
-  color: #8b5cf6;
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .auth-button {
@@ -154,11 +196,21 @@ export default {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
-.auth-button:hover {
+.auth-button:hover:not(:disabled) {
   background-color: #7c3aed;
+  transform: translateY(-1px);
+}
+
+.auth-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-loading {
+  opacity: 0.7;
 }
 
 .switch-auth-text {
