@@ -1,38 +1,26 @@
-// File: frontend/client/src/main.js
-
-import { createApp, reactive } from 'vue'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
+import router from './router'
 import './index.css'
 
 // Import the long press directive
 import longPress from './directives/longPress'
 
-// Global state for user authentication (check localStorage safely)
-let savedUser = null
-try {
-  savedUser = localStorage?.getItem('user')
-} catch (e) {
-  console.warn('localStorage not available:', e)
-}
+// Create Pinia instance
+const pinia = createPinia()
 
-export const globalState = reactive({
-  isLoggedIn: !!savedUser,
-  user: savedUser ? JSON.parse(savedUser) : null,
-})
-
-// Import router after globalState is defined
-import router from './router'
-
-// Create the Vue application instance
+// Create Vue app
 const app = createApp(App)
 
 // Register the long-press directive
 app.directive('long-press', longPress)
 
-// Use router and mount when ready
+// Use plugins
+app.use(pinia)
 app.use(router)
 
-// Simple mount without router.isReady() to avoid circular dependency
+// Mount app
 if (typeof document !== 'undefined') {
   app.mount('#app')
 }

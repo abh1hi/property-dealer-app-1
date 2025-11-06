@@ -1,55 +1,63 @@
 <template>
-  <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-t-lg z-50 pb-safe-bottom">
-    <div class="flex justify-around h-16 items-center">
-      <router-link to="/" class="bottom-nav-link" aria-label="Home">
-        <!-- Replace with actual icons -->
-        <i class="fas fa-home"></i>
-        <span class="text-xs font-medium">Home</span>
+  <nav class="bottom-nav fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 md:hidden">
+    <div class="flex items-center justify-around py-2">
+      <router-link 
+        to="/" 
+        class="flex flex-col items-center py-2 px-3 text-xs"
+        :class="$route.path === '/' ? 'text-blue-600' : 'text-gray-500'"
+      >
+        <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L22 12L20 14L12 6L4 14L2 12L12 2M5 15H19V22H5V15Z"/>
+        </svg>
+        <span>Home</span>
       </router-link>
-      <router-link to="/shop" class="bottom-nav-link" aria-label="Shop">
-        <i class="fas fa-store"></i>
-        <span class="text-xs font-medium">Shop</span>
+
+      <router-link 
+        to="/property" 
+        class="flex flex-col items-center py-2 px-3 text-xs"
+        :class="$route.path.startsWith('/property') ? 'text-blue-600' : 'text-gray-500'"
+      >
+        <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M21 21L16.514 16.506L21 21ZM18 10.5C18 15.194 14.194 19 9.5 19S1 15.194 1 10.5 4.806 2 9.5 2 18 5.806 18 10.5Z"/>
+        </svg>
+        <span>Search</span>
       </router-link>
-      <router-link to="/cart" class="bottom-nav-link relative" aria-label="Cart">
-        <i class="fas fa-shopping-bag"></i>
-        <span class="text-xs font-medium">Cart</span>
-        <span v-if="cartCount > 0" class="absolute -top-1 right-[calc(50%-1.25rem)] bg-primary text-white rounded-full h-4 w-4 flex items-center justify-center font-bold text-[10px] ring-1 ring-white">{{ cartCount > 99 ? '99+' : cartCount }}</span>
+
+      <router-link 
+        to="/user/favorites" 
+        class="flex flex-col items-center py-2 px-3 text-xs relative"
+        :class="$route.path === '/user/favorites' ? 'text-blue-600' : 'text-gray-500'"
+      >
+        <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        <span>Favorites</span>
+        <div v-if="favoritesCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          {{ favoritesCount }}
+        </div>
       </router-link>
-      <router-link to="/account" class="bottom-nav-link" aria-label="Account">
-        <i class="fas fa-user"></i>
-        <span class="text-xs font-medium">Account</span>
+
+      <router-link 
+        to="/user/profile" 
+        class="flex flex-col items-center py-2 px-3 text-xs"
+        :class="$route.path.startsWith('/user') ? 'text-blue-600' : 'text-gray-500'"
+      >
+        <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 12C14.21 12 16 10.21 16 8S14.21 4 12 4 8 5.79 8 8 9.79 12 12 12M12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"/>
+        </svg>
+        <span>Profile</span>
       </router-link>
     </div>
   </nav>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed } from 'vue'
+import { useFavoritesStore } from '@/store/favorites'
 
-// Mock data for cart count
-const cartCount = ref(3);
+const favoritesStore = useFavoritesStore()
 
+const favoritesCount = computed(() => {
+  return favoritesStore.favoritesCount
+})
 </script>
-
-<style scoped>
-.pb-safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
-}
-
-.bottom-nav-link {
-  @apply flex flex-col items-center justify-center text-gray-500 transition-colors duration-200 h-full w-full;
-  text-decoration: none;
-}
-
-.bottom-nav-link:hover {
-  @apply text-primary;
-}
-
-.bottom-nav-link.router-link-exact-active {
-  @apply text-primary font-semibold;
-}
-
-.bottom-nav-link i {
-  @apply text-xl mb-1;
-}
-</style>
