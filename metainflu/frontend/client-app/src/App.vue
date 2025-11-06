@@ -1,10 +1,10 @@
 <template>
-  <div id="app" class="min-h-screen bg-gray-50">
+  <div id="app" class="min-h-screen bg-white">
     <!-- Show navbar on all pages except auth -->
     <Navbar v-if="!isAuthPage" />
     
     <!-- Main content -->
-    <main class="flex-1" :class="{ 'pb-16': !isAuthPage && isMobile }">
+    <main class="flex-1">
       <router-view />
     </main>
     
@@ -20,7 +20,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
-import { createPinia } from 'pinia'
 import Navbar from '@/components/Navbar.vue'
 import Footer from '@/components/Footer.vue'
 import BottomNav from '@/components/BottomNav.vue'
@@ -38,9 +37,6 @@ const checkMobile = () => {
 }
 
 onMounted(() => {
-  // Check authentication on app load
-  authStore.checkAuth()
-  
   // Check mobile status
   checkMobile()
   
@@ -58,24 +54,6 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   margin: 0;
   padding: 0;
-}
-
-/* Custom scrollbar for webkit browsers */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }
 
 /* Focus styles for accessibility */

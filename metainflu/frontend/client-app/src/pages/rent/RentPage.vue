@@ -1,10 +1,10 @@
 <template>
-  <div class="rent-page min-h-screen bg-gray-50">
+  <div class="rent-page min-h-screen bg-white">
     <!-- Page Header -->
-    <div class="bg-blue-600 text-white py-12">
+    <div class="py-12">
       <div class="max-w-7xl mx-auto px-4 text-center">
-        <h1 class="text-3xl md:text-4xl font-bold mb-4">Properties for Rent</h1>
-        <p class="text-blue-100 text-lg">Find the perfect rental property</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Properties for Rent</h1>
+        <p class="text-gray-600 text-lg">Find the perfect rental property</p>
       </div>
     </div>
 
@@ -14,23 +14,16 @@
     <!-- Properties Grid -->
     <div class="max-w-7xl mx-auto px-4 py-8">
       <!-- Loading State -->
-      <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <div v-for="i in 9" :key="i" class="animate-pulse">
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="bg-gray-300 h-48"></div>
-            <div class="p-4">
-              <div class="bg-gray-300 h-4 rounded mb-2"></div>
-              <div class="bg-gray-300 h-4 rounded mb-2"></div>
-              <div class="bg-gray-300 h-4 rounded w-3/4"></div>
-            </div>
-          </div>
+          <div class="bg-gray-200 h-64 rounded-lg"></div>
         </div>
       </div>
 
       <!-- No Results -->
       <div v-else-if="propertiesForRent.length === 0" class="text-center py-12">
-        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M19 7H16V6A4 4 0 0 0 8 6V7H5A1 1 0 0 0 4 8V18A4 4 0 0 0 8 22H16A4 4 0 0 0 20 18V8A1 1 0 0 0 19 7M10 6A2 2 0 0 1 14 6V7H10V6M18 18A2 2 0 0 1 16 20H8A2 2 0 0 1 6 18V9H8V10A1 1 0 0 0 10 10A1 1 0 0 0 10 8V9H14V10A1 1 0 0 0 16 10A1 1 0 0 0 16 8V9H18V18Z"/>
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.124-1.28-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.124-1.28.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No rental properties found</h3>
         <p class="text-gray-600 mb-4">Try adjusting your search criteria</p>
@@ -48,7 +41,7 @@
           <p class="text-gray-600">{{ propertiesForRent.length }} rental properties available</p>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <PropertyCard 
             v-for="property in propertiesForRent" 
             :key="property._id" 

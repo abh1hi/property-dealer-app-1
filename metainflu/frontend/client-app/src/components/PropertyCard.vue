@@ -1,83 +1,67 @@
 <template>
-  <div class="property-card bg-white rounded-lg shadow-md overflow-hidden border border-blue-100 hover:shadow-lg transition-shadow duration-300">
+  <div class="property-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
     <!-- Property Image -->
-    <div class="relative h-48 overflow-hidden">
+    <div class="relative h-52 overflow-hidden">
       <img 
         :src="property.images?.[0]?.url || '/placeholder-property.jpg'" 
         :alt="property.name"
-        class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+        class="w-full h-full object-cover"
       />
       <div class="absolute top-3 right-3">
         <button 
-          @click="toggleFavorite"
-          class="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center hover:bg-white transition-colors"
+          @click.stop.prevent="toggleFavorite"
+          class="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors shadow-sm"
         >
-          <svg class="w-4 h-4" :class="isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" :class="isFavorite ? 'text-red-500 fill-current' : 'text-gray-500'" viewBox="0 0 24 24">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
         </button>
       </div>
-      <div class="absolute top-3 left-3">
-        <span class="px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded">
-          {{ property.type || 'For Sale' }}
-        </span>
+      <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+        <h3 class="text-xl font-semibold text-white line-clamp-1">{{ property.name }}</h3>
+        <p class="text-sm text-gray-200 line-clamp-1">{{ property.location || 'Location not specified' }}</p>
       </div>
     </div>
     
     <!-- Property Details -->
     <div class="p-4">
-      <div class="flex items-start justify-between mb-2">
-        <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">{{ property.name }}</h3>
-        <span class="text-lg font-bold text-blue-600">${{ formatPrice(property.price) }}</span>
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-2xl font-bold text-blue-600">${{ formatPrice(property.price) }}</span>
+        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+          {{ property.type || 'For Sale' }}
+        </span>
       </div>
       
-      <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ property.description }}</p>
-      
       <!-- Property Stats -->
-      <div class="flex items-center gap-4 text-sm text-gray-500 mb-3">
-        <div class="flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M19 2H5C3.89 2 3 2.89 3 4V20C3 21.11 3.89 22 5 22H19C20.11 22 21 21.11 21 20V4C21 2.89 20.11 2 19 2M19 20H5V4H19V20Z"/>
+      <div class="flex items-center gap-4 text-sm text-gray-600 border-t border-b border-gray-100 py-3 my-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
           </svg>
           <span>{{ property.bedrooms || 'N/A' }} beds</span>
         </div>
-        <div class="flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M9 2V8H11V4.5H13V8H15V2H9M12 9C10.89 9 10 9.89 10 11V22H14V11C14 9.89 13.11 9 12 9M3 13V22H7V13H3M17 13V22H21V13H17Z"/>
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
           <span>{{ property.bathrooms || 'N/A' }} baths</span>
         </div>
-        <div class="flex items-center gap-1">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2L22 12L20 14L12 6L4 14L2 12L12 2Z"/>
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V8m0 0h-4m4 0l-5-5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 0h-4m4 0l-5 5"/>
           </svg>
           <span>{{ property.area || 'N/A' }} sqft</span>
         </div>
       </div>
       
-      <!-- Location -->
-      <div class="flex items-center gap-2 text-sm text-gray-500 mb-4">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2M12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5Z"/>
-        </svg>
-        <span>{{ property.location || 'Location not specified' }}</span>
-      </div>
-      
       <!-- Action Buttons -->
-      <div class="flex gap-2">
+      <div class="mt-4">
         <button 
           @click="viewDetails"
-          class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
+          class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
         >
           View Details
-        </button>
-        <button 
-          @click="contactAgent"
-          class="px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
-        >
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4M20 8L12 13L4 8V6L12 11L20 6V8Z"/>
-          </svg>
         </button>
       </div>
     </div>
@@ -85,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFavoritesStore } from '@/store/favorites'
 
@@ -104,7 +88,7 @@ const isFavorite = computed(() => {
 })
 
 const formatPrice = (price) => {
-  if (!price) return 'Price on request'
+  if (!price) return 'On request'
   return new Intl.NumberFormat('en-US').format(price)
 }
 
@@ -119,24 +103,12 @@ const toggleFavorite = async () => {
 const viewDetails = () => {
   router.push(`/property/${props.property._id}`)
 }
-
-const contactAgent = () => {
-  // TODO: Open contact modal or navigate to contact page
-  console.log('Contact agent for property:', props.property._id)
-}
 </script>
 
 <style scoped>
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

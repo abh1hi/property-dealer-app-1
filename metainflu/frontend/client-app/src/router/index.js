@@ -38,9 +38,35 @@ const router = createRouter({
           path: '',
           name: 'PropertyList',
           component: () => import('../pages/property/PropertyList.vue')
+        },
+        {
+          path: 'add',
+          name: 'AddProperty',
+          component: () => import('../pages/property/AddProperty.vue'),
+          meta: { requiresAuth: true }
         }
       ]
     },
+
+    // User Routes
+    {
+      path: '/user',
+      children: [
+        {
+          path: 'profile',
+          name: 'UserProfile',
+          component: () => import('../pages/user/Profile.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'my-listings',
+          name: 'MyListings',
+          component: () => import('../pages/user/MyListings.vue'),
+          meta: { requiresAuth: true }
+        }
+      ]
+    },
+
 
     // Category Routes
     {
