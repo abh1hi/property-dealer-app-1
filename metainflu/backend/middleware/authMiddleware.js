@@ -1,7 +1,8 @@
 /*
   File: metainflu/backend/middleware/authMiddleware.js
   Purpose: This file contains Express middleware for authentication and authorization.
-  'protect' verifies the JWT, 'admin' checks for admin role, and 'vendor' checks for vendor role.
+  'protect' verifies the JWT, 'admin' checks for admin role, 'buyer' checks for buyer role,
+  and 'seller' checks for seller role.
 */
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
@@ -41,14 +42,34 @@ const admin = (req, res, next) => {
   }
 };
 
-// Middleware to check if the user is a vendor.
-const vendor = (req, res, next) => {
-  if (req.user && req.user.role === 'vendor') {
+// Middleware to check if the user is a buyer.
+const buyer = (req, res, next) => {
+  if (req.user && req.user.role === 'buyer') {
     next();
   } else {
     res.status(401);
-    throw new Error('Not authorized as a vendor');
+    throw new Error('Not authorized as a buyer');
   }
 };
 
-module.exports = { protect, admin, vendor };
+// Middleware to check if the user is a seller.
+const seller = (req, res, next) => {
+  if (req.user && req.user.role === 'seller') {
+    next();
+  } else {
+    res.status(401);
+    throw new Error('Not authorized as a seller');
+  }
+};
+
+// Middleware to check if the user is either a buyer or seller.
+const buyerOrSeller = (req, res, next) => {
+  if (req.user && (req.user.role === 'buyer' || req.user.role === 'seller')) {
+    next();
+  } else {
+    res.status(401);
+    throw new Error('Not authorized as a buyer or seller');
+  }
+};
+
+module.exports = { protect, admin, buyer, seller, buyerOrSeller };
