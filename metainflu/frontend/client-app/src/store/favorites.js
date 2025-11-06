@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { favoritesApi } from '@/services/api'
+import favoriteService from '@/services/favoriteService'
 
 export const useFavoritesStore = defineStore('favorites', {
   state: () => ({
@@ -11,7 +11,7 @@ export const useFavoritesStore = defineStore('favorites', {
   getters: {
     favoritesCount: (state) => state.favorites.length,
     isFavorite: (state) => (propertyId) => {
-      return state.favorites.some(fav => fav._id === propertyId)
+      return state.favorites.some(fav => fav.property?._id === propertyId || fav._id === propertyId)
     }
   },
 
@@ -21,12 +21,15 @@ export const useFavoritesStore = defineStore('favorites', {
         this.loading = true
         this.error = null
         
-        const response = await favoritesApi.getFavorites()
-        this.favorites = response.data.items || []
+        const response = await favoriteService.getFavorites()
+        // Handle both array response and object with data property
+        this.favorites = Array.isArray(response) ? response : (response.favorites || response.data || [])
         
       } catch (error) {
         this.error = error.message
         console.error('Failed to fetch favorites:', error)
+        // Don't throw, just log - favorites are not critical
+        this.favorites = []
       } finally {
         this.loading = false
       }
@@ -34,7 +37,8 @@ export const useFavoritesStore = defineStore('favorites', {
 
     async addToFavorites(propertyId) {
       try {
-        await favoritesApi.addToFavorites(propertyId)
+        this.loading = true
+        await favoriteService.addToFavorites(propertyId)
         // Refresh favorites to get updated list
         await this.fetchFavorites()
         
@@ -42,27 +46,36 @@ export const useFavoritesStore = defineStore('favorites', {
         this.error = error.message
         console.error('Failed to add to favorites:', error)
         throw error
+      } finally {
+        this.loading = false
       }
     },
 
     async removeFromFavorites(propertyId) {
       try {
-        await favoritesApi.removeFromFavorites(propertyId)
-        this.favorites = this.favorites.filter(fav => fav._id !== propertyId)
+        this.loading = true
+        await favoriteService.removeFromFavorites(propertyId)
+        this.favorites = this.favorites.filter(fav => {
+          const favId = fav.property?._id || fav._id
+          return favId !== propertyId
+        })
         
       } catch (error) {
         this.error = error.message
         console.error('Failed to remove from favorites:', error)
         throw error
+      } finally {
+        this.loading = false
       }
     },
 
     async toggleFavorite(property) {
       try {
-        if (this.isFavorite(property._id)) {
-          await this.removeFromFavorites(property._id)
+        const propertyId = property._id || property
+        if (this.isFavorite(propertyId)) {
+          await this.removeFromFavorites(propertyId)
         } else {
-          await this.addToFavorites(property._id)
+          await this.addToFavorites(propertyId)
         }
       } catch (error) {
         console.error('Failed to toggle favorite:', error)
