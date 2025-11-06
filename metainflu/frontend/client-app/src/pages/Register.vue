@@ -4,7 +4,7 @@
       <div class="text-center">
         <h1 class="auth-title text-gray-900">Create Account</h1>
         <p class="auth-subtitle text-gray-600">
-          {{ showOTP ? 'Enter the OTP sent to your mobile' : 'Sign up with your mobile number' }}
+          {{ showOTP ? 'Enter the OTP sent to your mobile' : 'Sign up as a buyer' }}
         </p>
       </div>
 
@@ -102,6 +102,7 @@ export default {
         name: '',
         mobile: '',
         aadhaar: '',
+        role: 'buyer' // Default role set to buyer
       },
       userId: '',
       showOTP: false,
@@ -139,6 +140,7 @@ export default {
         const userData = {
           name: this.formData.name.trim(),
           mobile: this.formData.mobile.trim(),
+          role: this.formData.role // Include role in registration data
         };
 
         // Only include aadhaar if provided
