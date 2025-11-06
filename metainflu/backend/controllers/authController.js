@@ -42,12 +42,14 @@ const registerUser = asyncHandler(async (req, res) => {
   const otp = generateOTP();
   await sendOTP(mobile, otp);
 
+  // Create user with default role 'buyer' (set by schema)
   const user = await User.create({
     name,
     mobile,
     aadhaar,
     otp,
     otpExpires: Date.now() + 10 * 60 * 1000, // OTP valid for 10 minutes
+    // role is automatically set to 'buyer' by schema default
   });
 
   if (user) {
@@ -111,6 +113,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     name: user.name,
     mobile: user.mobile,
     aadhaar: user.aadhaar,
+    role: user.role, // Include role in response
     token: generateToken(user._id),
   });
 });
