@@ -22,7 +22,7 @@ const sendOTP = async (mobile, otp) => {
   // TODO: Integrate with an actual SMS gateway like Twilio or MessageBird
 };
 
-// @desc    Register user with mobile + Aadhaar
+// @desc    Register user with mobile + Aadhaar + Password (optional)
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
@@ -31,7 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, mobile, aadhaar } = req.body;
+  const { name, mobile, aadhaar, password } = req.body;
 
   const userExists = await User.findOne({ mobile });
   if (userExists) {
@@ -43,19 +43,26 @@ const registerUser = asyncHandler(async (req, res) => {
   await sendOTP(mobile, otp);
 
   // Create user with default role 'buyer' (set by schema)
-  const user = await User.create({
+  const userData = {
     name,
     mobile,
     aadhaar,
     otp,
     otpExpires: Date.now() + 10 * 60 * 1000, // OTP valid for 10 minutes
-    // role is automatically set to 'buyer' by schema default
-  });
+  };
+
+  // Add password if provided
+  if (password) {
+    userData.password = password;
+  }
+
+  const user = await User.create(userData);
 
   if (user) {
     res.status(201).json({
       message: 'OTP sent to mobile number',
       userId: user._id,
+      hasPassword: !!password, // Indicate if user set a password
     });
   } else {
     res.status(400);
@@ -63,10 +70,10 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Login with OTP verification
-// @route   POST /api/auth/login
+// @desc    Login with mobile (sends OTP)
+// @route   POST /api/auth/login/otp
 // @access  Public
-const loginUser = asyncHandler(async (req, res) => {
+const loginWithOTP = asyncHandler(async (req, res) => {
   const { mobile } = req.body;
 
   const user = await User.findOne({ mobile });
@@ -83,7 +90,54 @@ const loginUser = asyncHandler(async (req, res) => {
   user.otpExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
   await user.save();
 
-  res.status(200).json({ message: 'OTP sent to mobile number', userId: user._id });
+  res.status(200).json({ 
+    message: 'OTP sent to mobile number', 
+    userId: user._id 
+  });
+});
+
+// @desc    Login with password
+// @route   POST /api/auth/login/password
+// @access  Public
+const loginWithPassword = asyncHandler(async (req, res) => {
+  const { mobile, password } = req.body;
+
+  if (!mobile || !password) {
+    res.status(400);
+    throw new Error('Please provide mobile and password');
+  }
+
+  // Find user and include password field
+  const user = await User.findOne({ mobile }).select('+password');
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  // Check if user has a password set
+  if (!user.password) {
+    res.status(400);
+    throw new Error('Password login not available. Please use OTP login.');
+  }
+
+  // Verify password
+  const isPasswordMatch = await user.matchPassword(password);
+
+  if (!isPasswordMatch) {
+    res.status(401);
+    throw new Error('Invalid credentials');
+  }
+
+  // Return user data with token
+  res.json({
+    _id: user.id,
+    name: user.name,
+    mobile: user.mobile,
+    aadhaar: user.aadhaar,
+    role: user.role,
+    token: generateToken(user._id),
+  });
 });
 
 // @desc    OTP verification
@@ -113,13 +167,40 @@ const verifyOTP = asyncHandler(async (req, res) => {
     name: user.name,
     mobile: user.mobile,
     aadhaar: user.aadhaar,
-    role: user.role, // Include role in response
+    role: user.role,
     token: generateToken(user._id),
+  });
+});
+
+// @desc    Check if user has password set
+// @route   POST /api/auth/check-auth-method
+// @access  Public
+const checkAuthMethod = asyncHandler(async (req, res) => {
+  const { mobile } = req.body;
+
+  if (!mobile) {
+    res.status(400);
+    throw new Error('Please provide mobile number');
+  }
+
+  const user = await User.findOne({ mobile }).select('+password');
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  res.json({
+    mobile: user.mobile,
+    hasPassword: !!user.password,
+    availableMethods: user.password ? ['otp', 'password'] : ['otp'],
   });
 });
 
 module.exports = {
   registerUser,
-  loginUser,
+  loginWithOTP,
+  loginWithPassword,
   verifyOTP,
+  checkAuthMethod,
 };
