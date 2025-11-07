@@ -46,11 +46,11 @@ export const authApi = {
 
 // Property API (using existing product endpoints)
 export const propertyApi = {
-  getProperties: (params = {}) => api.get('/products', { params }),
-  getProperty: (id) => api.get(`/products/${id}`),
-  createProperty: (propertyData) => api.post('/products', propertyData),
-  updateProperty: (id, propertyData) => api.put(`/products/${id}`, propertyData),
-  deleteProperty: (id) => api.delete(`/products/${id}`)
+  getProperties: (params = {}) => api.get('/properties', { params }),
+  getProperty: (id) => api.get(`/properties/${id}`),
+  createProperty: (propertyData) => api.post('/properties', propertyData),
+  updateProperty: (id, propertyData) => api.put(`/properties/${id}`, propertyData),
+  deleteProperty: (id) => api.delete(`/properties/${id}`)
 }
 
 // Favorites API (using cart endpoints)

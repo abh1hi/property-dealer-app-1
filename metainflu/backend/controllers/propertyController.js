@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 // @route   GET /api/properties
 // @access  Public
 const getProperties = asyncHandler(async (req, res) => {
-  const { propertyType, minPrice, maxPrice, bedrooms, bathrooms, latitude, longitude, address } = req.query;
+  const { propertyType, minPrice, maxPrice, bedrooms, bathrooms, latitude, longitude, address, featured, limit } = req.query;
   let filter = {};
 
   if (propertyType) {
@@ -27,16 +27,21 @@ const getProperties = asyncHandler(async (req, res) => {
   if (address) {
     filter.address = { $regex: address, $options: 'i' };
   }
-  // Add location-based filtering if both latitude and longitude are provided
   if (latitude && longitude) {
-    // This is a basic example, for more advanced geo-spatial queries,
-    // you might need MongoDB's geospatial features and 2dsphere index.
-    // For now, we'll just add them to the filter if they exist.
     filter.latitude = Number(latitude);
     filter.longitude = Number(longitude);
   }
+  if (featured === 'true') {
+    filter.isFeatured = true;
+  }
 
-  const properties = await Property.find(filter);
+  let query = Property.find(filter);
+
+  if (limit) {
+    query = query.limit(Number(limit));
+  }
+
+  const properties = await query;
   res.json(properties);
 });
 

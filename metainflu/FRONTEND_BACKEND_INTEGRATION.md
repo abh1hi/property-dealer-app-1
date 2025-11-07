@@ -1,5 +1,7 @@
 # Frontend-Backend Integration Updates
 
+**Note:** The files `metainflu/backend/BACKEND_DOCUMENTATION.md` and `metainflu/frontend/client-app/FRONTEND_CLIENT_DOCUMENTATION.md` are now obsolete. This document and `DUAL_AUTH_DOCUMENTATION.md` are the current sources of truth.
+
 ## Overview
 
 This document outlines the updates made to properly connect the frontend Vue.js application with the backend Express API for the Property Dealer App.
@@ -121,21 +123,29 @@ This document outlines the updates made to properly connect the frontend Vue.js 
 ```javascript
 // Registration
 1. POST /api/auth/register
-   Body: { name, mobile, aadhaar? }
-   Response: { message, userId }
+   Body: { name, mobile, aadhaar?, password? }
+   Response: { message, userId, hasPassword }
 
 2. POST /api/auth/verify-otp
    Body: { userId, otp }
-   Response: { _id, name, mobile, aadhaar, token }
+   Response: { _id, name, mobile, aadhaar, role, token }
 
 // Login
-1. POST /api/auth/login
+1. POST /api/auth/check-auth-method
+   Body: { mobile }
+   Response: { mobile, hasPassword, availableMethods: ['otp', 'password'] }
+
+2. (if hasPassword) POST /api/auth/login/password
+   Body: { mobile, password }
+   Response: { _id, name, mobile, aadhaar, role, token }
+
+2. (if !hasPassword or user chooses OTP) POST /api/auth/login/otp
    Body: { mobile }
    Response: { message, userId }
 
-2. POST /api/auth/verify-otp
+3. POST /api/auth/verify-otp
    Body: { userId, otp }
-   Response: { _id, name, mobile, aadhaar, token }
+   Response: { _id, name, mobile, aadhaar, role, token }
 ```
 
 ### Property Data Structure
