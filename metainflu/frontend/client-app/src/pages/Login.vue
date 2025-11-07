@@ -334,7 +334,7 @@ export default {
         }
         
         this.error = errorMessage;
-        throw err; // Re-throw for OTPVerification component to handle
+        // Don't re-throw - let OTPVerification handle its own error display
       }
     },
     
