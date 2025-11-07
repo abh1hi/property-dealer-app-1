@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import favoriteService from '@/services/favoriteService'
+import { useAuthStore } from '@/store/auth'
 
 export const useFavoritesStore = defineStore('favorites', {
   state: () => ({
@@ -17,6 +18,14 @@ export const useFavoritesStore = defineStore('favorites', {
 
   actions: {
     async fetchFavorites() {
+      // Check if user is authenticated before fetching
+      const authStore = useAuthStore()
+      if (!authStore.isAuthenticated) {
+        console.log('User not authenticated, skipping favorites fetch')
+        this.favorites = []
+        return
+      }
+
       try {
         this.loading = true
         this.error = null
@@ -81,6 +90,12 @@ export const useFavoritesStore = defineStore('favorites', {
         console.error('Failed to toggle favorite:', error)
         throw error
       }
+    },
+
+    // Clear favorites on logout
+    clearFavorites() {
+      this.favorites = []
+      this.error = null
     }
   }
 })
