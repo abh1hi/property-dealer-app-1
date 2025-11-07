@@ -33,10 +33,13 @@ api.interceptors.response.use(
   }
 )
 
-// Auth API
+// Auth API - REMOVED LEGACY /auth/login endpoint
 export const authApi = {
   register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
+  checkAuthMethod: (mobile) => api.post('/auth/check-auth-method', { mobile }),
+  loginWithPassword: (mobile, password) => api.post('/auth/login/password', { mobile, password }),
+  loginWithOTP: (mobile) => api.post('/auth/login/otp', { mobile }),
+  verifyOTP: (userId, otp) => api.post('/auth/verify-otp', { userId, otp }),
   adminLogin: (credentials) => api.post('/auth/admin/login', credentials),
   vendorLogin: (credentials) => api.post('/auth/vendor/login', credentials)
 }
