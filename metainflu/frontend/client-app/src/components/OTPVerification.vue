@@ -161,7 +161,10 @@ export default {
       try {
         await this.$emit('verify', this.otpValue);
       } catch (err) {
-        this.error = err.message || 'Invalid OTP. Please try again.';
+        // Extract the actual error message from the caught error
+        this.error = err.message || 'OTP verification failed.';
+        console.error('[OTPVerification] Verification error:', err);
+        
         // Clear OTP on error
         this.otpDigits = ['', '', '', '', '', ''];
         this.$nextTick(() => {
