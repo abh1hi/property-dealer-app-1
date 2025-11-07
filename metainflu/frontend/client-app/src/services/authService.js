@@ -6,35 +6,74 @@ import { apiClient } from '../config/api';
  * Returns userId for OTP verification step.
  */
 const register = async (userData) => {
-  // ...as before...
+  try {
+    const response = await apiClient.post('/auth/register', userData);
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
  * Check which authentication methods are available for a mobile number
  */
 const checkAuthMethod = async (mobile) => {
-  // ...as before...
+  try {
+    const response = await apiClient.post('/auth/check-auth-method', { mobile });
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
  * Login with mobile number using OTP.
  */
 const loginWithOTP = async (mobile) => {
-  // ...as before...
+  try {
+    const response = await apiClient.post('/auth/login/otp', { mobile });
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
  * Login with mobile number and password.
  */
 const loginWithPassword = async (mobile, password) => {
-  // ...as before...
+  try {
+    const response = await apiClient.post('/auth/login/password', { mobile, password });
+    
+    // Store token and user data
+    if (response.token) {
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response));
+    }
+    
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
  * Verify OTP sent to mobile number.
  */
 const verifyOTP = async (userId, otp) => {
-  // ...as before...
+  try {
+    const response = await apiClient.post('/auth/verify-otp', { userId, otp });
+    
+    // Store token and user data
+    if (response.token) {
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response));
+    }
+    
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
