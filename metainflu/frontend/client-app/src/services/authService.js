@@ -64,14 +64,24 @@ const verifyOTP = async (userId, otp) => {
   try {
     const response = await apiClient.post('/auth/verify-otp', { userId, otp });
     
+    console.log('[authService] verifyOTP response:', response);
+    console.log('[authService] response.token:', response.token);
+    console.log('[authService] typeof response:', typeof response);
+    console.log('[authService] response keys:', Object.keys(response));
+    
     // Store token and user data
     if (response.token) {
+      console.log('[authService] Token found, storing...');
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response));
+    } else {
+      console.warn('[authService] No token in response! Cannot store user session.');
+      console.warn('[authService] Full response:', JSON.stringify(response, null, 2));
     }
     
     return response;
   } catch (error) {
+    console.error('[authService] verifyOTP error:', error);
     throw error;
   }
 };
