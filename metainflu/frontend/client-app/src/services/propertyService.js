@@ -1,225 +1,205 @@
-import { apiClient } from '../config/api';
+import axios from 'axios';
 
-/**
- * Validate property data before sending to backend
- */
-const validatePropertyData = (propertyData) => {
-  const errors = [];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-  // Required fields validation
-  if (!propertyData.title || propertyData.title.trim() === '') {
-    errors.push('Title is required');
+// Get auth token from localStorage
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Create axios instance with auth header
+const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
   }
+});
 
-  if (!propertyData.description || propertyData.description.trim() === '') {
-    errors.push('Description is required');
-  }
-
-  if (!propertyData.price || propertyData.price <= 0) {
-    errors.push('Valid price is required');
-  }
-
-  if (!propertyData.address || propertyData.address.trim() === '') {
-    errors.push('Address is required');
-  }
-
-  if (!propertyData.propertyType || propertyData.propertyType.trim() === '') {
-    errors.push('Property type is required');
-  }
-
-  // Validate propertyType enum
-  const validTypes = ['apartment', 'house', 'land', 'commercial'];
-  if (propertyData.propertyType && !validTypes.includes(propertyData.propertyType)) {
-    errors.push(`Property type must be one of: ${validTypes.join(', ')}`);
-  }
-
-  if (!propertyData.bedrooms || propertyData.bedrooms < 0) {
-    errors.push('Valid number of bedrooms is required');
-  }
-
-  if (!propertyData.bathrooms || propertyData.bathrooms < 0) {
-    errors.push('Valid number of bathrooms is required');
-  }
-
-  if (!propertyData.area || propertyData.area <= 0) {
-    errors.push('Valid area is required');
-  }
-
-  // Optional fields validation
-  if (propertyData.latitude !== undefined && propertyData.latitude !== null) {
-    if (propertyData.latitude < -90 || propertyData.latitude > 90) {
-      errors.push('Latitude must be between -90 and 90');
+// Add token to requests
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-
-  if (propertyData.longitude !== undefined && propertyData.longitude !== null) {
-    if (propertyData.longitude < -180 || propertyData.longitude > 180) {
-      errors.push('Longitude must be between -180 and 180');
-    }
-  }
-
-  return errors;
-};
+);
 
 /**
- * Format property data for backend API
+ * Create a new property with images
+ * @param {FormData} formData - Property data including images
+ * @returns {Promise<Object>} - Created property
  */
-const formatPropertyData = (propertyData) => {
-  return {
-    title: propertyData.title?.trim(),
-    description: propertyData.description?.trim(),
-    price: Number(propertyData.price),
-    address: propertyData.address?.trim(),
-    latitude: propertyData.latitude ? Number(propertyData.latitude) : undefined,
-    longitude: propertyData.longitude ? Number(propertyData.longitude) : undefined,
-    propertyType: propertyData.propertyType?.trim().toLowerCase(),
-    bedrooms: Number(propertyData.bedrooms),
-    bathrooms: Number(propertyData.bathrooms),
-    area: Number(propertyData.area),
-    amenities: Array.isArray(propertyData.amenities) ? propertyData.amenities : [],
-    images: Array.isArray(propertyData.images) ? propertyData.images : [],
-  };
-};
-
-/**
- * Get all properties with optional filters
- */
-const getProperties = async (params = {}) => {
+export const createProperty = async (formData) => {
   try {
-    // Format query parameters
-    const queryParams = {};
-
-    if (params.propertyType) queryParams.propertyType = params.propertyType;
-    if (params.minPrice) queryParams.minPrice = params.minPrice;
-    if (params.maxPrice) queryParams.maxPrice = params.maxPrice;
-    if (params.bedrooms) queryParams.bedrooms = params.bedrooms;
-    if (params.bathrooms) queryParams.bathrooms = params.bathrooms;
-    if (params.latitude) queryParams.latitude = params.latitude;
-    if (params.longitude) queryParams.longitude = params.longitude;
-    if (params.address) queryParams.address = params.address;
-
-    const data = await apiClient.get('/properties', queryParams);
-    return data;
-  } catch (error) {
-    console.error('Error fetching properties:', error);
-    throw error;
-  }
-};
-
-/**
- * Get a single property by ID
- */
-const getPropertyById = async (id) => {
-  if (!id || id.trim() === '') {
-    throw new Error('Property ID is required');
-  }
-
-  try {
-    const data = await apiClient.get(`/properties/${id.trim()}`);
-    return data;
-  } catch (error) {
-    console.error('Error fetching property:', error);
-    throw error;
-  }
-};
-
-/**
- * Create a new property
- */
-const createProperty = async (propertyData) => {
-  // Validate data
-  const errors = validatePropertyData(propertyData);
-  if (errors.length > 0) {
-    throw new Error(`Validation errors: ${errors.join(', ')}`);
-  }
-
-  // Format data
-  const formattedData = formatPropertyData(propertyData);
-
-  try {
-    const data = await apiClient.post('/properties', formattedData);
-    return data;
+    const response = await axios.post(`${API_URL}/properties`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return response.data;
   } catch (error) {
     console.error('Error creating property:', error);
-    throw error;
+    throw error.response?.data || error;
   }
 };
 
 /**
  * Update an existing property
+ * @param {String} id - Property ID
+ * @param {FormData} formData - Updated property data
+ * @returns {Promise<Object>} - Updated property
  */
-const updateProperty = async (id, propertyData) => {
-  if (!id || id.trim() === '') {
-    throw new Error('Property ID is required');
-  }
-
-  // Validate data
-  const errors = validatePropertyData(propertyData);
-  if (errors.length > 0) {
-    throw new Error(`Validation errors: ${errors.join(', ')}`);
-  }
-
-  // Format data
-  const formattedData = formatPropertyData(propertyData);
-
+export const updateProperty = async (id, formData) => {
   try {
-    const data = await apiClient.put(`/properties/${id.trim()}`, formattedData);
-    return data;
+    const response = await axios.put(`${API_URL}/properties/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return response.data;
   } catch (error) {
     console.error('Error updating property:', error);
-    throw error;
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Upload images to existing property
+ * @param {String} propertyId - Property ID
+ * @param {Array<File>} images - Array of image files
+ * @returns {Promise<Object>} - Upload result
+ */
+export const uploadPropertyImages = async (propertyId, images) => {
+  try {
+    const formData = new FormData();
+    images.forEach(image => {
+      formData.append('images', image);
+    });
+    
+    const response = await axios.post(
+      `${API_URL}/properties/${propertyId}/images`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${getAuthToken()}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading images:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Delete a specific image from property
+ * @param {String} propertyId - Property ID
+ * @param {Number} imageIndex - Index of image to delete
+ * @returns {Promise<Object>} - Delete result
+ */
+export const deletePropertyImage = async (propertyId, imageIndex) => {
+  try {
+    const response = await apiClient.delete(
+      `/properties/${propertyId}/images/${imageIndex}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Get all properties with optional filters
+ * @param {Object} filters - Filter parameters
+ * @returns {Promise<Array>} - List of properties
+ */
+export const getProperties = async (filters = {}) => {
+  try {
+    const response = await apiClient.get('/properties', { params: filters });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Get property by ID
+ * @param {String} id - Property ID
+ * @returns {Promise<Object>} - Property details
+ */
+export const getPropertyById = async (id) => {
+  try {
+    const response = await apiClient.get(`/properties/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Get user's properties
+ * @returns {Promise<Array>} - User's properties
+ */
+export const getUserProperties = async () => {
+  try {
+    const response = await apiClient.get('/properties/user/my-properties');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user properties:', error);
+    throw error.response?.data || error;
   }
 };
 
 /**
  * Delete a property
+ * @param {String} id - Property ID
+ * @returns {Promise<Object>} - Delete result
  */
-const deleteProperty = async (id) => {
-  if (!id || id.trim() === '') {
-    throw new Error('Property ID is required');
-  }
-
+export const deleteProperty = async (id) => {
   try {
-    const data = await apiClient.delete(`/properties/${id.trim()}`);
-    return data;
+    const response = await apiClient.delete(`/properties/${id}`);
+    return response.data;
   } catch (error) {
     console.error('Error deleting property:', error);
-    throw error;
+    throw error.response?.data || error;
   }
 };
 
 /**
- * Search properties with keyword
+ * Search properties
+ * @param {Object} searchParams - Search parameters
+ * @returns {Promise<Array>} - Search results
  */
-const searchProperties = async (params = {}) => {
+export const searchProperties = async (searchParams) => {
   try {
-    const queryParams = {};
-
-    if (params.keyword) queryParams.keyword = params.keyword;
-    if (params.propertyType) queryParams.propertyType = params.propertyType;
-    if (params.minPrice) queryParams.minPrice = params.minPrice;
-    if (params.maxPrice) queryParams.maxPrice = params.maxPrice;
-    if (params.bedrooms) queryParams.bedrooms = params.bedrooms;
-    if (params.bathrooms) queryParams.bathrooms = params.bathrooms;
-    if (params.latitude) queryParams.latitude = params.latitude;
-    if (params.longitude) queryParams.longitude = params.longitude;
-    if (params.address) queryParams.address = params.address;
-
-    const data = await apiClient.get('/search', queryParams);
-    return data;
+    const response = await apiClient.get('/properties/search', { params: searchParams });
+    return response.data;
   } catch (error) {
     console.error('Error searching properties:', error);
-    throw error;
+    throw error.response?.data || error;
   }
 };
 
 export default {
-  getProperties,
-  getPropertyById,
   createProperty,
   updateProperty,
+  uploadPropertyImages,
+  deletePropertyImage,
+  getProperties,
+  getPropertyById,
+  getUserProperties,
   deleteProperty,
-  searchProperties,
-  validatePropertyData,
-  formatPropertyData,
+  searchProperties
 };
