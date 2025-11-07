@@ -11,9 +11,11 @@ const getUserProfile = asyncHandler(async (req, res) => {
     res.json({
       _id: user._id,
       name: user.name,
-      email: user.email,
       mobile: user.mobile,
       aadhaar: user.aadhaar,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     });
   } else {
     res.status(404);
@@ -29,18 +31,23 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
   if (user) {
     user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
     user.mobile = req.body.mobile || user.mobile;
-    user.aadhaar = req.body.aadhaar || user.aadhaar;
+    
+    // Only update aadhaar if provided
+    if (req.body.aadhaar !== undefined) {
+      user.aadhaar = req.body.aadhaar;
+    }
 
     const updatedUser = await user.save();
 
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
-      email: updatedUser.email,
       mobile: updatedUser.mobile,
       aadhaar: updatedUser.aadhaar,
+      role: updatedUser.role,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
     });
   } else {
     res.status(404);
