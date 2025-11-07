@@ -1,6 +1,7 @@
 const Property = require('../models/Property');
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
+const { processImages } = require('../utils/imageUpload');
 
 // @desc    Fetch all properties, optionally filtered
 // @route   GET /api/properties
@@ -59,7 +60,7 @@ const getPropertyById = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Create a property
+// @desc    Create a property with images
 // @route   POST /api/properties
 // @access  Private
 const createProperty = asyncHandler(async (req, res) => {
@@ -75,27 +76,43 @@ const createProperty = asyncHandler(async (req, res) => {
     bathrooms,
     area,
     amenities,
-    images,
   } = req.body;
+
+  // Process uploaded images
+  let images = [];
+  if (req.files && req.files.length > 0) {
+    const processedImages = await processImages(req.files, {
+      maxSizeInBytes: 2 * 1024 * 1024, // 2MB
+      quality: 80,
+      format: 'webp'
+    });
+    
+    // Extract base64 data URLs
+    images = processedImages.map(img => img.data);
+  }
 
   const property = new Property({
     title,
     description,
     price,
     address,
-    latitude,
-    longitude,
+    latitude: latitude ? Number(latitude) : undefined,
+    longitude: longitude ? Number(longitude) : undefined,
     propertyType,
-    bedrooms,
-    bathrooms,
-    area,
-    amenities,
+    bedrooms: Number(bedrooms),
+    bathrooms: Number(bathrooms),
+    area: Number(area),
+    amenities: amenities ? (Array.isArray(amenities) ? amenities : JSON.parse(amenities)) : [],
     images,
     user: req.user._id,
   });
 
   const createdProperty = await property.save();
-  res.status(201).json(createdProperty);
+  res.status(201).json({
+    success: true,
+    data: createdProperty,
+    message: 'Property created successfully'
+  });
 });
 
 // @desc    Update a property
@@ -117,12 +134,35 @@ const updateProperty = asyncHandler(async (req, res) => {
     throw new Error('Not authorized to update this property');
   }
 
+  // Process new uploaded images if any
+  if (req.files && req.files.length > 0) {
+    const processedImages = await processImages(req.files, {
+      maxSizeInBytes: 2 * 1024 * 1024,
+      quality: 80,
+      format: 'webp'
+    });
+    
+    const newImages = processedImages.map(img => img.data);
+    
+    // Append new images to existing ones
+    updateData.images = [...property.images, ...newImages];
+  }
+
+  // Update property fields
   Object.keys(updateData).forEach(key => {
-    property[key] = updateData[key];
+    if (key === 'amenities' && typeof updateData[key] === 'string') {
+      property[key] = JSON.parse(updateData[key]);
+    } else {
+      property[key] = updateData[key];
+    }
   });
 
   const updatedProperty = await property.save();
-  res.json(updatedProperty);
+  res.json({
+    success: true,
+    data: updatedProperty,
+    message: 'Property updated successfully'
+  });
 });
 
 // @desc    Delete a property
@@ -138,23 +178,101 @@ const deleteProperty = asyncHandler(async (req, res) => {
     }
     
     await property.deleteOne();
-    res.json({ message: 'Property removed' });
+    res.json({ 
+      success: true,
+      message: 'Property removed' 
+    });
   } else {
     res.status(404);
     throw new Error('Property not found');
   }
 });
 
-const uploadImages = asyncHandler(async (req, res) => {
-  if (req.files) {
-    const images = req.files.map(file => `/uploads/${file.filename}`);
-    res.status(200).json({ images });
-  } else {
+// @desc    Upload images to existing property
+// @route   POST /api/properties/:id/images
+// @access  Private
+const uploadPropertyImages = asyncHandler(async (req, res) => {
+  const property = await Property.findById(req.params.id);
+
+  if (!property) {
+    res.status(404);
+    throw new Error('Property not found');
+  }
+
+  if (property.user.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to update this property');
+  }
+
+  if (!req.files || req.files.length === 0) {
     res.status(400);
     throw new Error('No images uploaded');
   }
+
+  // Check total image count
+  if (property.images.length + req.files.length > 10) {
+    res.status(400);
+    throw new Error('Maximum 10 images allowed per property');
+  }
+
+  // Process uploaded images
+  const processedImages = await processImages(req.files, {
+    maxSizeInBytes: 2 * 1024 * 1024,
+    quality: 80,
+    format: 'webp'
+  });
+  
+  const newImages = processedImages.map(img => img.data);
+  
+  // Add new images to property
+  property.images = [...property.images, ...newImages];
+  await property.save();
+
+  res.status(200).json({
+    success: true,
+    images: newImages,
+    totalImages: property.images.length,
+    message: 'Images uploaded successfully'
+  });
 });
 
+// @desc    Delete specific image from property
+// @route   DELETE /api/properties/:id/images/:imageIndex
+// @access  Private
+const deletePropertyImage = asyncHandler(async (req, res) => {
+  const property = await Property.findById(req.params.id);
+
+  if (!property) {
+    res.status(404);
+    throw new Error('Property not found');
+  }
+
+  if (property.user.toString() !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to update this property');
+  }
+
+  const imageIndex = parseInt(req.params.imageIndex);
+
+  if (imageIndex < 0 || imageIndex >= property.images.length) {
+    res.status(400);
+    throw new Error('Invalid image index');
+  }
+
+  // Remove image at index
+  property.images.splice(imageIndex, 1);
+  await property.save();
+
+  res.json({
+    success: true,
+    message: 'Image deleted successfully',
+    remainingImages: property.images.length
+  });
+});
+
+// @desc    Search properties
+// @route   GET /api/properties/search
+// @access  Public
 const searchProperties = asyncHandler(async (req, res) => {
   const { keyword, propertyType, minPrice, maxPrice, bedrooms, bathrooms, latitude, longitude, address } = req.query;
   let filter = {};
@@ -163,7 +281,7 @@ const searchProperties = asyncHandler(async (req, res) => {
     filter.$or = [
       { title: { $regex: keyword, $options: 'i' } },
       { description: { $regex: keyword, $options: 'i' } },
-      { address: { $regex: keyword, $options: 'i' } }, // Search keyword in address too
+      { address: { $regex: keyword, $options: 'i' } },
     ];
   }
 
@@ -185,14 +303,30 @@ const searchProperties = asyncHandler(async (req, res) => {
   if (address) {
     filter.address = { $regex: address, $options: 'i' };
   }
-  // Add location-based filtering if both latitude and longitude are provided
   if (latitude && longitude) {
     filter.latitude = Number(latitude);
     filter.longitude = Number(longitude);
   }
 
   const properties = await Property.find(filter);
-  res.json(properties);
+  res.json({
+    success: true,
+    count: properties.length,
+    data: properties
+  });
+});
+
+// @desc    Get user's properties
+// @route   GET /api/properties/user/my-properties
+// @access  Private
+const getUserProperties = asyncHandler(async (req, res) => {
+  const properties = await Property.find({ user: req.user._id }).sort({ createdAt: -1 });
+  
+  res.json({
+    success: true,
+    count: properties.length,
+    data: properties
+  });
 });
 
 module.exports = {
@@ -201,6 +335,8 @@ module.exports = {
   createProperty,
   updateProperty,
   deleteProperty,
-  uploadImages,
+  uploadPropertyImages,
+  deletePropertyImage,
   searchProperties,
+  getUserProperties
 };
