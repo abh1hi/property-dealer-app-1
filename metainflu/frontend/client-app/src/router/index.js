@@ -30,6 +30,16 @@ const router = createRouter({
       ]
     },
 
+    // Backward compatibility - keep old auth routes
+    {
+      path: '/login',
+      redirect: '/auth/login'
+    },
+    {
+      path: '/register',
+      redirect: '/auth/register'
+    },
+
     // Property Routes
     {
       path: '/property',
@@ -63,10 +73,15 @@ const router = createRouter({
           name: 'MyListings',
           component: () => import('../pages/user/MyListings.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'favorites',
+          name: 'UserFavorites',
+          component: () => import('../pages/user/Favorites.vue'),
+          meta: { requiresAuth: true }
         }
       ]
     },
-
 
     // Category Routes
     {
@@ -79,23 +94,41 @@ const router = createRouter({
       name: 'RentPage',
       component: () => import('../pages/rent/RentPage.vue')
     },
+    {
+      path: '/sell',
+      name: 'SellPage',
+      component: () => import('../pages/property/AddProperty.vue'),
+      meta: { requiresAuth: true }
+    },
 
     // Keep existing routes for now (until pages are created)
     {
       path: '/contact',
       name: 'Contact',
       component: () => import('../pages/Contact.vue')
+    },
+
+    // 404 Route
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('../pages/NotFound.vue')
     }
   ]
 })
 
 // Navigation Guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+  
+  // Initialize auth state from localStorage if not already initialized
+  if (!authStore.isAuthenticated && localStorage.getItem('token')) {
+    await authStore.checkAuth()
+  }
   
   // Check if route requires authentication
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return next('/auth/login')
+    return next({ path: '/auth/login', query: { redirect: to.fullPath } })
   }
   
   // Check if route requires guest (not authenticated)

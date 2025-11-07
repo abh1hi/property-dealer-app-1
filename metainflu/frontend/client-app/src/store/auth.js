@@ -67,6 +67,11 @@ export const useAuthStore = defineStore('auth', {
       if (data.token) {
         localStorage.setItem('token', data.token)
       }
+
+      // Store user data
+      if (this.user) {
+        localStorage.setItem('user', JSON.stringify(this.user))
+      }
     },
 
     logout() {
@@ -74,19 +79,33 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.isAuthenticated = false
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
+
+      // Clear favorites store
+      try {
+        const { useFavoritesStore } = require('@/store/favorites')
+        const favoritesStore = useFavoritesStore()
+        favoritesStore.clearFavorites()
+      } catch (error) {
+        console.error('Error clearing favorites on logout:', error)
+      }
     },
 
     async checkAuth() {
       const token = localStorage.getItem('token')
-      if (token) {
-        this.token = token
+      const userStr = localStorage.getItem('user')
+      
+      if (token && userStr) {
         try {
-          // Verify token by making a request (you might need to adjust this endpoint)
-          // For now, we'll just set the token and assume it's valid
+          this.token = token
+          this.user = JSON.parse(userStr)
           this.isAuthenticated = true
         } catch (error) {
+          console.error('Error parsing stored user data:', error)
           this.logout()
         }
+      } else {
+        this.isAuthenticated = false
       }
     }
   }
