@@ -39,6 +39,40 @@
         </div>
 
         <div class="form-group">
+          <label for="password" class="input-label">
+            Password (Optional)
+            <span class="text-sm text-gray-500 font-normal ml-1">- Set for password login</span>
+          </label>
+          <div class="password-input-wrapper">
+            <input
+              id="password"
+              v-model="formData.password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Enter password (min 6 characters)"
+              minlength="6"
+              class="auth-input"
+            />
+            <button 
+              v-if="formData.password"
+              type="button"
+              @click="togglePasswordVisibility"
+              class="password-toggle"
+            >
+              <svg v-if="!showPassword" class="password-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg v-else class="password-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">
+            You can login with password or OTP. Leave blank to use OTP only.
+          </p>
+        </div>
+
+        <div class="form-group">
           <label for="aadhaar" class="sr-only">Aadhaar Number (Optional)</label>
           <input
             id="aadhaar"
@@ -57,7 +91,7 @@
         <button 
           type="submit" 
           :disabled="isLoading"
-          class="auth-button"
+          class="auth-button bg-blue-600 hover:bg-blue-700"
           :class="{ 'button-loading': isLoading }"
         >
           <span v-if="!isLoading">Send OTP</span>
@@ -101,11 +135,13 @@ export default {
       formData: {
         name: '',
         mobile: '',
+        password: '',
         aadhaar: '',
-        role: 'buyer' // Default role set to buyer
+        role: 'buyer'
       },
       userId: '',
       showOTP: false,
+      showPassword: false,
       error: '',
       isLoading: false,
     };
@@ -121,6 +157,12 @@ export default {
       const mobileRegex = /^[0-9]{10}$/;
       if (!this.formData.mobile || !mobileRegex.test(this.formData.mobile)) {
         this.error = 'Please enter a valid 10-digit mobile number';
+        return;
+      }
+
+      // Validate password if provided
+      if (this.formData.password && this.formData.password.length < 6) {
+        this.error = 'Password must be at least 6 characters long';
         return;
       }
 
@@ -140,10 +182,15 @@ export default {
         const userData = {
           name: this.formData.name.trim(),
           mobile: this.formData.mobile.trim(),
-          role: this.formData.role // Include role in registration data
+          role: this.formData.role
         };
 
-        // Only include aadhaar if provided
+        // Include password if provided
+        if (this.formData.password && this.formData.password.trim() !== '') {
+          userData.password = this.formData.password;
+        }
+
+        // Include aadhaar if provided
         if (this.formData.aadhaar && this.formData.aadhaar.trim() !== '') {
           userData.aadhaar = this.formData.aadhaar.trim();
         }
@@ -172,6 +219,10 @@ export default {
         console.error('OTP verification error:', err);
         throw new Error(err.message || 'Invalid OTP. Please try again.');
       }
+    },
+
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
     },
   },
 };
@@ -215,6 +266,14 @@ export default {
   margin-bottom: 1.25rem;
 }
 
+.input-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
 .auth-input {
   width: 100%;
   padding: 1rem 1.25rem;
@@ -226,12 +285,38 @@ export default {
 
 .auth-input:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .input-error {
   border-color: #ef4444;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #374151;
+}
+
+.password-icon {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .error-message {
@@ -247,7 +332,6 @@ export default {
   font-size: 1rem;
   font-weight: 600;
   color: #ffffff;
-  background-color: #8b5cf6;
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -255,7 +339,6 @@ export default {
 }
 
 .auth-button:hover:not(:disabled) {
-  background-color: #7c3aed;
   transform: translateY(-1px);
 }
 
@@ -277,12 +360,12 @@ export default {
 
 .switch-auth-link {
   font-weight: 600;
-  color: #8b5cf6;
+  color: #2563eb;
   text-decoration: none;
   transition: color 0.2s ease-in-out;
 }
 
 .switch-auth-link:hover {
-  color: #7c3aed;
+  color: #1d4ed8;
 }
 </style>
