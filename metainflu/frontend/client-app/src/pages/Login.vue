@@ -191,65 +191,159 @@ export default {
       }
       this.error = '';
       this.isLoading = true;
+      
+      console.log('[Login] Checking auth methods for mobile:', this.mobile);
+      
       try {
-        // First, check available auth methods
         const response = await authService.checkAuthMethod(this.mobile);
-        this.availableMethods = response.availableMethods;
+        console.log('[Login] Auth method response:', response);
+        
+        this.availableMethods = response.availableMethods || [];
         this.checkedMethods = true;
         this.error = '';
+        
+        console.log('[Login] Available methods:', this.availableMethods);
       } catch (err) {
-        this.error = err.message || 'Failed to check authentication method.';
+        console.error('[Login] Check auth method error:', err);
+        console.error('[Login] Error details:', {
+          message: err.message,
+          response: err.response,
+          stack: err.stack
+        });
+        
+        // Extract error message
+        let errorMessage = 'Failed to check authentication method.';
+        if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
+        this.error = errorMessage;
       } finally {
         this.isLoading = false;
       }
     },
+    
     chooseAuthMethod(method) {
+      console.log('[Login] Auth method chosen:', method);
       this.selectedMethod = method;
       this.authMethodChosen = true;
       if (method === 'otp') {
         this.handleSendOTP();
       }
     },
+    
     async handlePasswordLogin() {
       this.error = '';
       this.isLoading = true;
+      
+      console.log('[Login] Attempting password login for mobile:', this.mobile);
+      
       try {
         const response = await authService.loginWithPassword(this.mobile, this.password);
+        console.log('[Login] Password login success:', response);
+        
         const redirect = this.route.query.redirect || '/';
+        console.log('[Login] Redirecting to:', redirect);
+        
         this.router.push(redirect);
       } catch (err) {
-        this.error = err.message || 'Invalid credentials. Please try again.';
+        console.error('[Login] Password login error:', err);
+        console.error('[Login] Error details:', {
+          message: err.message,
+          response: err.response,
+          stack: err.stack
+        });
+        
+        // Extract error message
+        let errorMessage = 'Invalid credentials. Please try again.';
+        if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
+        this.error = errorMessage;
       } finally {
         this.isLoading = false;
       }
     },
+    
     async handleSendOTP() {
       this.error = '';
       this.isLoading = true;
+      
+      console.log('[Login] Sending OTP to mobile:', this.mobile);
+      
       try {
         const response = await authService.loginWithOTP(this.mobile);
+        console.log('[Login] OTP sent, response:', response);
+        
         this.userId = response.userId;
         this.error = '';
       } catch (err) {
-        this.error = err.message || 'Failed to send OTP. Please try again.';
+        console.error('[Login] Send OTP error:', err);
+        console.error('[Login] Error details:', {
+          message: err.message,
+          response: err.response,
+          stack: err.stack
+        });
+        
+        // Extract error message
+        let errorMessage = 'Failed to send OTP. Please try again.';
+        if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
+        this.error = errorMessage;
       } finally {
         this.isLoading = false;
       }
     },
+    
     async handleVerifyOTP(otp) {
       this.error = '';
+      
+      console.log('[Login] Verifying OTP for userId:', this.userId);
+      
       try {
-        await authService.verifyOTP(this.userId, otp);
+        const response = await authService.verifyOTP(this.userId, otp);
+        console.log('[Login] OTP verification success:', response);
+        
         const redirect = this.route.query.redirect || '/';
+        console.log('[Login] Redirecting to:', redirect);
+        
         this.router.push(redirect);
       } catch (err) {
-        this.error = err.message || 'Invalid OTP. Please try again.';
+        console.error('[Login] OTP verification error:', err);
+        console.error('[Login] Error details:', {
+          message: err.message,
+          response: err.response,
+          stack: err.stack
+        });
+        
+        // Extract error message
+        let errorMessage = 'Invalid OTP. Please try again.';
+        if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
+        this.error = errorMessage;
+        throw err; // Re-throw for OTPVerification component to handle
       }
     },
+    
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword;
     },
+    
     resetForm() {
+      console.log('[Login] Resetting form');
       this.checkedMethods = false;
       this.selectedMethod = '';
       this.authMethodChosen = false;
@@ -263,5 +357,197 @@ export default {
 </script>
 
 <style scoped>
-  /* ...same styles as before... */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.auth-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.auth-input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.input-error {
+  border-color: #ef4444;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.password-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #6b7280;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  text-align: center;
+  margin: -0.5rem 0 0 0;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.auth-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-loading {
+  opacity: 0.7;
+}
+
+.auth-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.methods-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.method-button {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.back-button:hover {
+  color: #2563eb;
+}
+
+.switch-auth-text {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.switch-auth-link {
+  color: #3b82f6;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.switch-auth-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
 </style>
