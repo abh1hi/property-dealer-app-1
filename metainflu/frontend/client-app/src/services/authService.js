@@ -1,130 +1,168 @@
-import { apiClient } from '../config/api';
+import { 
+  auth 
+} from '../config/firebase';
+import { 
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  signOut as firebaseSignOut,
+  onAuthStateChanged
+} from 'firebase/auth';
+import api from './api';
 
-/**
- * Register a new user with mobile, name, password (optional), and optionally Aadhaar.
- * Backend will send OTP to the mobile number.
- * Returns userId for OTP verification step.
- */
-const register = async (userData) => {
-  try {
-    const response = await apiClient.post('/auth/register', userData);
-    return response;
-  } catch (error) {
-    throw error;
+class AuthService {
+  constructor() {
+    this.recaptchaVerifier = null;
+    this.confirmationResult = null;
   }
-};
 
-/**
- * Check which authentication methods are available for a mobile number
- */
-const checkAuthMethod = async (mobile) => {
-  try {
-    const response = await apiClient.post('/auth/check-auth-method', { mobile });
-    return response;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * Login with mobile number using OTP.
- */
-const loginWithOTP = async (mobile) => {
-  try {
-    const response = await apiClient.post('/auth/login/otp', { mobile });
-    return response;
-  } catch (error) {
-    throw error;
-  }
-};
-
-/**
- * Login with mobile number and password.
- */
-const loginWithPassword = async (mobile, password) => {
-  try {
-    const response = await apiClient.post('/auth/login/password', { mobile, password });
-    
-    // Store token and user data
-    if (response.token) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response));
+  /**
+   * Initialize reCAPTCHA
+   */
+  initRecaptcha(containerId = 'recaptcha-container') {
+    if (!this.recaptchaVerifier) {
+      this.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: 'invisible',
+        callback: (response) => {
+          console.log('reCAPTCHA solved');
+        },
+        'expired-callback': () => {
+          console.log('reCAPTCHA expired');
+          this.recaptchaVerifier = null;
+        }
+      });
     }
-    
-    return response;
-  } catch (error) {
-    throw error;
+    return this.recaptchaVerifier;
   }
-};
 
-/**
- * Verify OTP sent to mobile number.
- */
-const verifyOTP = async (userId, otp) => {
-  try {
-    const response = await apiClient.post('/auth/verify-otp', { userId, otp });
-    
-    console.log('[authService] verifyOTP response:', response);
-    console.log('[authService] response.token:', response.token);
-    console.log('[authService] typeof response:', typeof response);
-    console.log('[authService] response keys:', Object.keys(response));
-    
-    // Store token and user data
-    if (response.token) {
-      console.log('[authService] Token found, storing...');
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response));
-    } else {
-      console.warn('[authService] No token in response! Cannot store user session.');
-      console.warn('[authService] Full response:', JSON.stringify(response, null, 2));
+  /**
+   * Send OTP to phone number
+   */
+  async sendOTP(phoneNumber) {
+    try {
+      // Ensure phone number has country code
+      const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
+      
+      // Initialize reCAPTCHA if not already done
+      const appVerifier = this.initRecaptcha();
+      
+      // Send OTP
+      this.confirmationResult = await signInWithPhoneNumber(
+        auth,
+        formattedPhone,
+        appVerifier
+      );
+      
+      return {
+        success: true,
+        message: 'OTP sent successfully'
+      };
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      
+      // Reset reCAPTCHA on error
+      this.recaptchaVerifier = null;
+      
+      return {
+        success: false,
+        message: error.message || 'Failed to send OTP'
+      };
     }
-    
-    return response;
-  } catch (error) {
-    console.error('[authService] verifyOTP error:', error);
-    throw error;
   }
-};
 
-/**
- * Logout user - clear local storage
- */
-const logout = () => {
-  localStorage.removeItem('user');
-  localStorage.removeItem('token');
-};
+  /**
+   * Verify OTP
+   */
+  async verifyOTP(otp) {
+    try {
+      if (!this.confirmationResult) {
+        throw new Error('No OTP request found. Please request OTP first.');
+      }
 
-const getCurrentUser = () => {
-  try {
+      // Verify OTP
+      const result = await this.confirmationResult.confirm(otp);
+      const user = result.user;
+
+      // Get Firebase ID token
+      const idToken = await user.getIdToken();
+
+      // Send to backend to create/update user
+      const response = await api.post('/auth/phone-login', {
+        firebaseUid: user.uid,
+        phoneNumber: user.phoneNumber,
+        idToken
+      });
+
+      // Store user data and token
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+
+      return {
+        success: true,
+        user: response.data.user,
+        token: response.data.token
+      };
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      return {
+        success: false,
+        message: error.message || 'Invalid OTP'
+      };
+    }
+  }
+
+  /**
+   * Sign out
+   */
+  async signOut() {
+    try {
+      await firebaseSignOut(auth);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return { success: true };
+    } catch (error) {
+      console.error('Error signing out:', error);
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+  }
+
+  /**
+   * Get current user
+   */
+  getCurrentUser() {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
-  } catch (error) {
-    console.error('Error getting current user:', error);
-    return null;
   }
-};
 
-const getToken = () => {
-  try {
+  /**
+   * Get auth token
+   */
+  getToken() {
     return localStorage.getItem('token');
-  } catch (error) {
-    console.error('Error getting token:', error);
-    return null;
   }
-};
 
-const isAuthenticated = () => {
-  return !!getToken();
-};
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated() {
+    return !!this.getToken();
+  }
 
-export default {
-  register,
-  checkAuthMethod,
-  loginWithOTP,
-  loginWithPassword,
-  verifyOTP,
-  logout,
-  getCurrentUser,
-  getToken,
-  isAuthenticated,
-};
+  /**
+   * Listen to auth state changes
+   */
+  onAuthStateChange(callback) {
+    return onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const idToken = await user.getIdToken();
+        callback({ user, idToken });
+      } else {
+        callback({ user: null, idToken: null });
+      }
+    });
+  }
+}
+
+export default new AuthService();
