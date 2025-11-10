@@ -10,9 +10,9 @@ admin.initializeApp();
 const app = express();
 
 // Middleware
-app.use(cors({origin: true})); // Enable CORS for all origins
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(cors({origin: true}));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 // Import routes
 const authRoutes = require("./routes/authRoutes");
@@ -35,34 +35,22 @@ app.use("/upload", uploadRoutes);
 app.use("/search", searchRoutes);
 
 // Health check route
-app.get('/', (req, res) => {
-  res.status(200).json({
-    message: "Property Dealer API - Firebase Cloud Functions",
-    timestamp: new Date().toISOString(),
-    version: "1.0.0",
-  });
+app.get("/", (req, res) => {
+    res.status(200).json({
+        message: "Property Dealer API - Firebase Cloud Functions",
+        timestamp: new Date().toISOString(),
+        version: "1.0.0",
+    });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && {stack: err.stack}),
-  });
+    console.error("Error:", err);
+    res.status(err.status || 500).json({
+        error: err.message || "Internal Server Error",
+    });
 });
 
 // Export the Express app as a Firebase Cloud Function
-exports.api = functions
-  .region("asia-south1") // Set your region
-  .https.onRequest(app);
-
-// Optional: Export other Cloud Functions here
-exports.scheduledCleanup = functions
-  .region("asia-south1")
-  .pubsub.schedule('every 24 hours')
-  .onRun(async (context) => {
-      console.log("Running scheduled cleanup...");
-    // Add cleanup logic here
-      return null;
-  });
+// WITHOUT .region() for older firebase-functions versions
+exports.api = functions.https.onRequest(app);
