@@ -8,7 +8,7 @@
 // For mobile/Capacitor development, create a .env.local file and set:
 // VITE_API_BASE_URL=http://YOUR_COMPUTER_IP:5000
 // Note: The base URL should already include /api if needed
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5001/test1-50da1/us-central1/api';
 
 // Enhanced API client with error handling
 export const apiClient = {
