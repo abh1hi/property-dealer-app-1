@@ -1,6 +1,6 @@
 {
-  "appId": "com.aurashop.app",
-  "appName": "Aura Shop",
+  "appId": "com.apnaaashiana.app",
+  "appName": "ashianaapp",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {

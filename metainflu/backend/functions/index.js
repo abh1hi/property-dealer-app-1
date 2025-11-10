@@ -1,71 +1,32 @@
-const functions = require('firebase-functions');
-const express = require('express');
-const cors = require('cors');
-const admin = require('firebase-admin');
+/**
+ * Import function triggers from their respective submodules:
+ *
+ * const {onCall} = require("firebase-functions/v2/https");
+ * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
+ *
+ * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ */
 
-// Initialize Firebase Admin SDK
-admin.initializeApp();
+const {setGlobalOptions} = require("firebase-functions");
+const {onRequest} = require("firebase-functions/https");
+const logger = require("firebase-functions/logger");
 
-// Initialize Express app
-const app = express();
+// For cost control, you can set the maximum number of containers that can be
+// running at the same time. This helps mitigate the impact of unexpected
+// traffic spikes by instead downgrading performance. This limit is a
+// per-function limit. You can override the limit for each function using the
+// `maxInstances` option in the function's options, e.g.
+// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
+// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
+// functions should each use functions.runWith({ maxInstances: 10 }) instead.
+// In the v1 API, each function can only serve one request per container, so
+// this will be the maximum concurrent request count.
+setGlobalOptions({ maxInstances: 10 });
 
-// Middleware
-app.use(cors({ 
-  origin: true,
-  credentials: true 
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Create and deploy your first functions
+// https://firebase.google.com/docs/functions/get-started
 
-// Import routes
-const authRoutes = require('./routes/authRoutes');
-const propertyRoutes = require('./routes/propertyRoutes');
-const userRoutes = require('./routes/userRoutes');
-
-// Register routes
-app.use('/api/auth', authRoutes);
-app.use('/api/properties', propertyRoutes);
-app.use('/api/users', userRoutes);
-
-// Health check endpoint
-app.get('/api', (req, res) => {
-  res.json({ 
-    status: 'ok',
-    message: 'Property Dealer API is running on Firebase Cloud Functions',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: {
-      message: err.message || 'Internal server error',
-      status: err.status || 500
-    }
-  });
-});
-
-// Export Express app as Cloud Function
-// Region: asia-south1 (Mumbai, India) for lower latency
-exports.api = functions
-  .region('asia-south1')
-  .runWith({
-    timeoutSeconds: 300,
-    memory: '512MB',
-    minInstances: 0, // Scale to zero when not in use
-    maxInstances: 10 // Limit for cost control
-  })
-  .https.onRequest(app);
-
-// Additional function for scheduled tasks (optional)
-exports.scheduledCleanup = functions
-  .region('asia-south1')
-  .pubsub.schedule('every 24 hours')
-  .onRun(async (context) => {
-    console.log('Running scheduled cleanup...');
-    // Add cleanup logic here
-    return null;
-  });
+// exports.helloWorld = onRequest((request, response) => {
+//   logger.info("Hello logs!", {structuredData: true});
+//   response.send("Hello from Firebase!");
+// });
