@@ -260,7 +260,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import PageHeader from '../components/PageHeader.vue'
+import AppHeader from '../components/AppHeader.vue'
 
 const router = useRouter()
 
