@@ -14,6 +14,16 @@ class AuthService {
     this.recaptchaVerifier = null;
     this.confirmationResult = null;
   }
+  
+  /**
+   * Register user with backend
+   */
+  async register({ name, mobile, aadhaar, password }) {
+    const data = { name, mobile, aadhaar };
+    if (password) data.password = password;
+    const res = await api.post('/auth/register', data);
+    return res.data;
+  }
 
   /**
    * Initialize reCAPTCHA
@@ -58,10 +68,8 @@ class AuthService {
       };
     } catch (error) {
       console.error('Error sending OTP:', error);
-      
       // Reset reCAPTCHA on error
       this.recaptchaVerifier = null;
-      
       return {
         success: false,
         message: error.message || 'Failed to send OTP'
@@ -81,21 +89,17 @@ class AuthService {
       // Verify OTP
       const result = await this.confirmationResult.confirm(otp);
       const user = result.user;
-
       // Get Firebase ID token
       const idToken = await user.getIdToken();
-
       // Send to backend to create/update user
       const response = await api.post('/auth/phone-login', {
         firebaseUid: user.uid,
         phoneNumber: user.phoneNumber,
         idToken
       });
-
       // Store user data and token
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-
       return {
         success: true,
         user: response.data.user,
