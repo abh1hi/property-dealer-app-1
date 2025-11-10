@@ -20,7 +20,8 @@ class AuthService {
    */
   initRecaptcha(containerId = 'recaptcha-container') {
     if (!this.recaptchaVerifier) {
-      this.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      // Corrected argument order: containerId, parameters, auth
+      this.recaptchaVerifier = new RecaptchaVerifier(containerId, {
         size: 'invisible',
         callback: (response) => {
           console.log('reCAPTCHA solved');
@@ -29,7 +30,7 @@ class AuthService {
           console.log('reCAPTCHA expired');
           this.recaptchaVerifier = null;
         }
-      });
+      }, auth);
     }
     return this.recaptchaVerifier;
   }
