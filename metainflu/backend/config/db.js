@@ -1,23 +1,28 @@
+const admin = require('firebase-admin');
 
-// File: backend/config/db.js
+// Initialize Firebase Admin SDK.
+if (admin.apps.length === 0) {
+  admin.initializeApp();
+  console.log('✅ Firebase Admin SDK initialized');
+}
 
-// Asynchronous function to connect to the database
-const connectDB = async () => {
-  try {
-    // Attempt to connect to the MongoDB URI directly
-    const conn = await mongoose.connect('mongodb://localhost:27017/aura-shop', {
-      // Use new URL parser and unified topology, recommended by MongoDB
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+const db = admin.firestore();
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    // Log the error and exit the process if connection fails
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
-  }
+// Helper function to get document with ID
+const docWithId = (doc) => {
+  if (!doc.exists) return null;
+  return {
+    id: doc.id,
+    ...doc.data(),
+  };
 };
 
-// Export the function to be used in server.js
-module.exports = connectDB;
+// Helper function to get collection with IDs
+const docsWithIds = (snapshot) => {
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+};
+
+module.exports = { admin, db, docWithId, docsWithIds };

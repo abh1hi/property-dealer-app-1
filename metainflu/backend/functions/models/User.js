@@ -1,3 +1,6 @@
+const { db, docWithId, docsWithIds } = require('../config/firestore');
+const bcrypt = require('bcrypt');
+
 class User {
   /**
    * Create a new user
