@@ -1,9 +1,7 @@
 const { db, docWithId, docsWithIds } = require('../config/firestore');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 class User {
-  static collection = db.collection('users');
-
   /**
    * Create a new user
    */
@@ -208,5 +206,7 @@ class User {
     }
   }
 }
+
+User.collection = db.collection('users');
 
 module.exports = User;

@@ -1,0 +1,32 @@
+[debug] [2025-11-10T14:01:01.380Z] ----------------------------------------------------------------------
+[debug] [2025-11-10T14:01:01.383Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\abhin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2025-11-10T14:01:01.384Z] CLI Version:   14.24.1
+[debug] [2025-11-10T14:01:01.384Z] Platform:      win32
+[debug] [2025-11-10T14:01:01.384Z] Node Version:  v22.19.0
+[debug] [2025-11-10T14:01:01.384Z] Time:          Mon Nov 10 2025 19:31:01 GMT+0530 (India Standard Time)
+[debug] [2025-11-10T14:01:01.384Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\abhin\Desktop\freelance\firebase-apnaaasiana\property-dealer-app-1
+
+[debug] [2025-11-10T14:01:07.787Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (C:\Users\abhin\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\@inquirer\core\dist\commonjs\lib\create-prompt.js:101:37)
+    at Interface.emit (node:events:519:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1132:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:271:20)
+    at ReadStream.emit (node:events:531:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:370:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.

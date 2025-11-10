@@ -1,4 +1,4 @@
-const { db, docWithId, docsWithIds } = require('../config/firestore');
+const { db, docWithId, docsWithIds } = require('../config/db');
 const slugify = require('slugify');
 
 class Property {
