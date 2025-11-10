@@ -4,7 +4,6 @@ import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyAA1WrAcjvokL4q6f208RLIwqzhxXoSS3g",
   authDomain: "metainflu.firebaseapp.com",
@@ -22,14 +21,24 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Add this to disable reCAPTCHA for testing with emulators
-auth.settings.appVerificationDisabledForTesting = true;
 
-// Connect to emulators if running locally
+// --- Connection Settings ---
+
+// To use the LIVE Firebase backend, comment out the entire 'if' block below.
+// To use the LOCAL emulators, keep the block uncommented.
+
 if (window.location.hostname === 'localhost') {
   console.log('Connecting to Firebase Emulators');
+
+  // Point to the emulators
   connectAuthEmulator(auth, "http://localhost:9099");
   connectFirestoreEmulator(db, 'localhost', 8080);
+  
+  // Disable reCAPTCHA for testing with emulators.
+  // This MUST be inside the emulator block and will crash the app if used with the live server.
+  if (auth.settings) {
+    auth.settings.appVerificationDisabledForTesting = true;
+  }
 }
 
 export { auth, db };
