@@ -2,8 +2,6 @@ const { db, docWithId, docsWithIds } = require('../config/firestore');
 const slugify = require('slugify');
 
 class Property {
-  static collection = db.collection('properties');
-
   /**
    * Create a new property
    */
@@ -214,7 +212,7 @@ class Property {
     } catch (error) {
       console.error('Error hard deleting property:', error);
       throw error;
-    }
+    } 
   }
 
   /**
@@ -255,5 +253,7 @@ class Property {
     }
   }
 }
+
+Property.collection = db.collection('properties');
 
 module.exports = Property;

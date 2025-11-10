@@ -1,4 +1,4 @@
-const admin = require('firebase-admin');
+const admin = require("firebase-admin");
 
 // Get Firestore instance
 const db = admin.firestore();
@@ -6,7 +6,7 @@ const db = admin.firestore();
 // Configure Firestore settings
 db.settings({
   ignoreUndefinedProperties: true,
-  timestampsInSnapshots: true
+  timestampsInSnapshots: true,
 });
 
 // Helper function to convert Firestore timestamp to Date
@@ -20,15 +20,15 @@ const docWithId = (doc) => {
   if (!doc.exists) return null;
   return {
     id: doc.id,
-    ...doc.data()
+    ...doc.data(),
   };
 };
 
 // Helper function to get collection with IDs
 const docsWithIds = (snapshot) => {
-  return snapshot.docs.map(doc => ({
+  return snapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data()
+    ...doc.data(),
   }));
 };
 
@@ -36,5 +36,6 @@ module.exports = {
   db,
   timestampToDate,
   docWithId,
-  docsWithIds
+  docsWithIds,
 };
+

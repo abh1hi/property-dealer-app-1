@@ -125,8 +125,10 @@ app.get('/', (req, res) => {
 app.use(errorHandler);
 
 // Start server
-app.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
-  console.log(`📱 Mobile apps can connect via: http://YOUR_IP:${port}`);
-  console.log(`🌐 Web apps can connect via: http://localhost:${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`🚀 Server running on port ${port}`);
+//   console.log(`📱 Mobile apps can connect via: http://YOUR_IP:${port}`);
+//   console.log(`🌐 Web apps can connect via: http://localhost:${port}`);
+// });
+
+module.exports = app;
