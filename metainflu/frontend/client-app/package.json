@@ -20,16 +20,9 @@
     "axios": "^1.6.0",
     "firebase": "^12.5.0",
     "leaflet": "^1.9.4",
-    "pinia": "^2.1.7",
-    "vue": "^3.4.21",
-<<<<<<< HEAD
-    "vue-router": "^4.5.1"
-=======
-    "vue-router": "^4.5.1",
-    "axios": "^1.6.0",
-    "leaflet": "^1.9.4",
-    "firebase": "^10.14.0"
->>>>>>> 39b30898426f564146bea6d738c7f86b434bc128
+  "pinia": "^2.1.7",
+  "vue": "^3.4.21",
+  "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
