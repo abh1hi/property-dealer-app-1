@@ -1,43 +1,28 @@
 <template>
-  <div class="relative">
-    <label :for="id" class="block text-sm font-medium text-gray-700 mb-1">{{ label }}</label>
-    <input
-      :id="id"
-      :type="type"
-      :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
-      :required="required"
-      class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-    />
-    <div class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
-      <slot name="icon"></slot>
-    </div>
+  <div>
+    <label :for="id" class="block text-sm font-medium text-secondary mb-2">{{ label }}</label>
+    <input :type="type" :id="id" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)"
+           :required="required"
+           class="w-full px-4 py-3 bg-gray-50 border-gray-300 rounded-xl focus:ring-primary focus:border-primary"
+           :placeholder="placeholder">
   </div>
 </template>
 
 <script setup>
-defineProps({
-  id: {
-    type: String,
-    required: true,
-  },
-  label: {
-    type: String,
-    required: true,
-  },
+import { computed } from 'vue';
+
+const props = defineProps({
+  modelValue: [String, Number],
+  label: String,
   type: {
     type: String,
     default: 'text',
   },
-  modelValue: {
-    type: [String, Number],
-    default: '',
-  },
-  required: {
-    type: Boolean,
-    default: false,
-  },
+  required: Boolean,
+  placeholder: String,
 });
 
 defineEmits(['update:modelValue']);
+
+const id = computed(() => `input-${Math.random().toString(36).substring(2, 9)}`);
 </script>

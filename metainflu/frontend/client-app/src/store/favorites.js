@@ -1,101 +1,117 @@
-import { defineStore } from 'pinia'
-import favoriteService from '@/services/favoriteService'
-import { useAuthStore } from '@/store/auth'
+import { defineStore } from 'pinia';
+import { ref, computed, watch } from 'vue';
+import { useAuthStore } from './auth';
 
-export const useFavoritesStore = defineStore('favorites', {
-  state: () => ({
-    favorites: [],
-    loading: false,
-    error: null
-  }),
-
-  getters: {
-    favoritesCount: (state) => state.favorites.length,
-    isFavorite: (state) => (propertyId) => {
-      return state.favorites.some(fav => fav.property?._id === propertyId || fav._id === propertyId)
-    }
+// Mock API service
+const mockFavoriteService = {
+  async getFavorites() {
+    console.log('Mock API: Fetching favorites');
+    const stored = localStorage.getItem('favorites');
+    return stored ? JSON.parse(stored) : [];
   },
+  async saveFavorites(favorites) {
+    console.log('Mock API: Saving favorites');
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    return true;
+  },
+};
 
-  actions: {
-    async fetchFavorites() {
-      // Check if user is authenticated before fetching
-      const authStore = useAuthStore()
-      if (!authStore.isAuthenticated) {
-        console.log('User not authenticated, skipping favorites fetch')
-        this.favorites = []
-        return
-      }
+export const useFavoritesStore = defineStore('favorites', () => {
+  const favorites = ref([]);
+  const loading = ref(false);
+  const error = ref(null);
+  const authStore = useAuthStore();
 
-      try {
-        this.loading = true
-        this.error = null
-        
-        const response = await favoriteService.getFavorites()
-        // Handle both array response and object with data property
-        this.favorites = Array.isArray(response) ? response : (response.favorites || response.data || [])
-        
-      } catch (error) {
-        this.error = error.message
-        console.error('Failed to fetch favorites:', error)
-        // Don't throw, just log - favorites are not critical
-        this.favorites = []
-      } finally {
-        this.loading = false
-      }
-    },
+  const favoritesCount = computed(() => favorites.value.length);
+  const isFavorite = (propertyId) => {
+    return computed(() => favorites.value.some(fav => fav._id === propertyId));
+  };
 
-    async addToFavorites(propertyId) {
-      try {
-        this.loading = true
-        await favoriteService.addToFavorites(propertyId)
-        // Refresh favorites to get updated list
-        await this.fetchFavorites()
-        
-      } catch (error) {
-        this.error = error.message
-        console.error('Failed to add to favorites:', error)
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async removeFromFavorites(propertyId) {
-      try {
-        this.loading = true
-        await favoriteService.removeFromFavorites(propertyId)
-        this.favorites = this.favorites.filter(fav => {
-          const favId = fav.property?._id || fav._id
-          return favId !== propertyId
-        })
-        
-      } catch (error) {
-        this.error = error.message
-        console.error('Failed to remove from favorites:', error)
-        throw error
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async toggleFavorite(property) {
-      try {
-        const propertyId = property._id || property
-        if (this.isFavorite(propertyId)) {
-          await this.removeFromFavorites(propertyId)
-        } else {
-          await this.addToFavorites(propertyId)
-        }
-      } catch (error) {
-        console.error('Failed to toggle favorite:', error)
-        throw error
-      }
-    },
-
-    // Clear favorites on logout
-    clearFavorites() {
-      this.favorites = []
-      this.error = null
+  async function fetchFavorites() {
+    if (!authStore.isAuthenticated) {
+      console.log('User not authenticated, skipping favorites fetch.');
+      favorites.value = [];
+      return;
+    }
+    loading.value = true;
+    error.value = null;
+    try {
+      favorites.value = await mockFavoriteService.getFavorites();
+    } catch (e) {
+      error.value = 'Failed to fetch favorites.';
+      console.error(e);
+    } finally {
+      loading.value = false;
     }
   }
-})
+
+  async function toggleFavorite(property) {
+    if (!authStore.isAuthenticated) {
+      // Optionally, prompt user to log in
+      console.log('Authentication required to manage favorites.');
+      return;
+    }
+
+    const propertyId = property._id;
+    const favIndex = favorites.value.findIndex(fav => fav._id === propertyId);
+
+    if (favIndex > -1) {
+      // Remove from favorites
+      favorites.value.splice(favIndex, 1);
+    } else {
+      // Add to favorites (storing a simplified property object)
+      favorites.value.push({
+        _id: property._id,
+        name: property.name,
+        location: property.location,
+        price: property.price,
+        images: property.images.slice(0, 1) // Store only the main image
+      });
+    }
+
+    // Persist changes
+    await persistFavorites();
+  }
+
+  async function persistFavorites() {
+    loading.value = true;
+    try {
+      await mockFavoriteService.saveFavorites(favorites.value);
+    } catch (e) {
+      error.value = 'Failed to update favorites.';
+      console.error(e);
+      // Optionally, revert optimistic update here
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  function clearFavorites() {
+    favorites.value = [];
+    error.value = null;
+    // Also clear from persistence
+    if (authStore.isAuthenticated) {
+        mockFavoriteService.saveFavorites([]);
+    }
+  }
+
+  // When auth state changes, fetch or clear favorites
+  watch(() => authStore.isAuthenticated, (isAuth) => {
+    if (isAuth) {
+      fetchFavorites();
+    } else {
+      clearFavorites();
+    }
+  }, { immediate: true }); // immediate check on store setup
+
+  return {
+    favorites,
+    loading,
+    error,
+    favoritesCount,
+    isFavorite,
+    fetchFavorites,
+    toggleFavorite,
+    clearFavorites,
+  };
+});

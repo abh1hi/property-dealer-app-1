@@ -1,25 +1,28 @@
 <template>
   <div 
     @click="$emit('select')" 
-    class="p-4 border rounded-lg cursor-pointer transition-all duration-200"
+    class="p-6 bg-surface rounded-2xl cursor-pointer transition-all duration-300 shadow-md hover:shadow-lg"
     :class="{ 
-      'bg-indigo-50 border-indigo-500 shadow-sm': selected, 
-      'bg-white hover:bg-gray-50': !selected 
+      'ring-2 ring-primary shadow-xl': selected, 
+      'hover:bg-gray-50': !selected 
     }"
   >
     <div class="flex justify-between items-start">
-      <div>
-        <p class="font-semibold text-gray-800">{{ address.fullName }}</p>
-        <p class="text-sm text-gray-600">{{ address.streetAddress }}</p>
-        <p class="text-sm text-gray-600">{{ address.city }}, {{ address.state }} {{ address.postalCode }}</p>
+      <div class="flex-grow">
+        <p class="font-bold text-lg text-on-surface mb-1">{{ address.fullName }}</p>
+        <p class="text-base text-secondary">{{ address.streetAddress }}</p>
+        <p class="text-base text-secondary">{{ address.city }}, {{ address.state }} {{ address.postalCode }}</p>
       </div>
-      <span v-if="address.isDefault" class="text-xs bg-gray-200 text-gray-800 px-2 py-0.5 rounded-full">Default</span>
+      <div v-if="address.isDefault" 
+           class="ml-4 flex-shrink-0 bg-primary bg-opacity-10 text-primary text-xs font-bold px-3 py-1 rounded-full">
+        DEFAULT
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
   address: {
     type: Object,
     required: true,
@@ -30,5 +33,5 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['select']);
+defineEmits(['select']);
 </script>

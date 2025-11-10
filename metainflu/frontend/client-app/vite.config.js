@@ -16,9 +16,9 @@ export default defineConfig({
     https: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5001/test1-50da1/us-central1',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/test1-50da1/us-central1/api'),
+        secure: false,
       },
     },
   },

@@ -1,58 +1,40 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-4">
-    <MapSelector :initial-center="mapCenter" @location-updated="handleLocationUpdate" />
+  <form @submit.prevent="handleSubmit" class="space-y-6 bg-surface p-8 rounded-3xl shadow-lg">
+    <MapSelector :initial-center="mapCenter" @location-updated="handleLocationUpdate" class="mb-8" />
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <InputField v-model="form.fullName" label="Full Name" required placeholder="John Doe" />
+      <InputField v-model="form.phoneNumber" label="Phone Number" required type="tel" placeholder="+1 (555) 555-5555" />
+    </div>
+
+    <InputField v-model="form.streetAddress" label="Street Address" required placeholder="123 Main St" />
+    <InputField v-model="form.apartment" label="Apartment, suite, etc. (Optional)" placeholder="Apt 4B" />
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <InputField v-model="form.city" label="City" required placeholder="San Francisco" />
+      <InputField v-model="form.state" label="State / Province" required placeholder="CA" />
+      <InputField v-model="form.postalCode" label="Postal Code" required placeholder="94103" />
+    </div>
+
+    <InputField v-model="form.country" label="Country" required placeholder="United States" />
 
     <div>
-      <label class="block text-sm font-medium text-gray-700">Address Type</label>
-      <select v-model="form.addressType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+      <label for="addressType" class="block text-sm font-medium text-secondary mb-2">Address Type</label>
+      <select id="addressType" v-model="form.addressType" class="w-full px-4 py-3 bg-gray-50 border-gray-300 rounded-xl focus:ring-primary focus:border-primary">
         <option>Home</option>
         <option>Work</option>
         <option>Other</option>
       </select>
     </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Full Name</label>
-      <input type="text" v-model="form.fullName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+
+    <div class="flex items-center mt-6">
+      <input type="checkbox" v-model="form.isDefault" id="isDefault" class="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary" />
+      <label for="isDefault" class="ml-3 block text-base text-secondary">Set as default address</label>
     </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Street Address</label>
-      <input type="text" v-model="form.streetAddress" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Apartment, suite, etc. (Optional)</label>
-      <input type="text" v-model="form.apartment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-    </div>
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">City</label>
-        <input type="text" v-model="form.city" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">State / Province</label>
-        <input type="text" v-model="form.state" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-      </div>
-    </div>
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Postal Code</label>
-            <input type="text" v-model="form.postalCode" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700">Country</label>
-            <input type="text" v-model="form.country" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-        </div>
-    </div>
-    <div>
-      <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-      <input type="tel" v-model="form.phoneNumber" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
-    </div>
-    <div class="flex items-center">
-      <input type="checkbox" v-model="form.isDefault" id="isDefault" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-      <label for="isDefault" class="ml-2 block text-sm text-gray-900">Set as default address</label>
-    </div>
-    <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 space-y-2 space-y-reverse sm:space-y-0">
-        <button type="button" @click="$emit('cancel')" class="w-full sm:w-auto justify-center bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
-        <button type="submit" class="w-full sm:w-auto inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Save Address</button>
+
+    <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-4 pt-6">
+      <button type="button" @click="$emit('cancel')" class="w-full sm:w-auto justify-center px-6 py-3 border border-gray-300 rounded-full text-base font-medium text-secondary bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">Cancel</button>
+      <button type="submit" class="w-full sm:w-auto inline-flex justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-on-primary bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">Save Address</button>
     </div>
   </form>
 </template>
@@ -60,6 +42,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import MapSelector from './MapSelector.vue';
+import InputField from './InputField.vue';
 import { reverseGeocode } from '../utils/geocoding';
 
 const props = defineProps({
@@ -96,7 +79,6 @@ const handleLocationUpdate = async ({ latitude, longitude }) => {
     form.value.longitude = longitude;
   } catch (error) {
     console.error('Failed to update address from map:', error);
-    // Optionally show a user-facing error message
   }
 };
 
