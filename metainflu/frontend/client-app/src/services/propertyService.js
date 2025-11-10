@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://3czzqk3l-5000.use2.devtunnels.ms/api';
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:5001/test1-50da1/us-central1/api';
 
 // Get auth token from localStorage
 const getAuthToken = () => {
