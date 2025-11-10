@@ -1,21 +1,28 @@
-import { initializeApp } from 'firebase/app';
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
 // Your web app's Firebase configuration
-// Replace with your actual config from Firebase Console
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || "property-dealer-app.firebaseapp.com",
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID || "property-dealer-app",
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || "property-dealer-app.appspot.com",
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: process.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abc123"
+  apiKey: "AIzaSyAA1WrAcjvokL4q6f208RLIwqzhxXoSS3g",
+  authDomain: "test1-50da1.firebaseapp.com",
+  projectId: "test1-50da1",
+  storageBucket: "test1-50da1.firebasestorage.app",
+  messagingSenderId: "317809189734",
+  appId: "1:317809189734:web:4177473e2f9143010a5ea7",
+  measurementId: "G-1K9VKFNNWM"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 // Initialize Firebase services
 export const auth = getAuth(app);
