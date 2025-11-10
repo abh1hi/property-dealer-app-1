@@ -21,6 +21,13 @@ class AuthService {
   initRecaptcha(containerId = 'recaptcha-container') {
     if (!this.recaptchaVerifier) {
       // Corrected argument order: containerId, parameters, auth
+      // Ensure auth.appVerificationDisabledForTesting exists for emulator
+      if (auth.emulatorConfig && auth.emulatorConfig.host) { // Check if emulator is in use
+        if (auth.appVerificationDisabledForTesting === undefined) {
+          auth.appVerificationDisabledForTesting = true; // Set to true for testing with emulator
+        }
+      }
+
       this.recaptchaVerifier = new RecaptchaVerifier(containerId, {
         size: 'invisible',
         callback: (response) => {
@@ -33,6 +40,21 @@ class AuthService {
       }, auth);
     }
     return this.recaptchaVerifier;
+  }
+
+  async register(userData) {
+    try {
+      // Make API call to backend to register user
+      const response = await api.post('/auth/register', userData);
+      
+      // If registration is successful, send OTP
+      await this.sendOTP(userData.mobile);
+
+      return { success: true, userId: response.data.userId };
+    } catch (error) {
+      console.error('Error during registration:', error);
+      throw error;
+    }
   }
 
   /**

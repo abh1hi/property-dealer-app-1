@@ -26,19 +26,9 @@ const db = getFirestore(app);
 
 // To use the LIVE Firebase backend, comment out the entire 'if' block below.
 // To use the LOCAL emulators, keep the block uncommented.
-
-if (window.location.hostname === 'localhost') {
-  console.log('Connecting to Firebase Emulators');
-
-  // Point to the emulators
+if (window.location.hostname === "localhost") {
   connectAuthEmulator(auth, "http://localhost:9099");
-  connectFirestoreEmulator(db, 'localhost', 8080);
-  
-  // Disable reCAPTCHA for testing with emulators.
-  // This MUST be inside the emulator block and will crash the app if used with the live server.
-  if (auth.settings) {
-    auth.settings.appVerificationDisabledForTesting = true;
-  }
+  connectFirestoreEmulator(db, "localhost", 8080);
 }
 
 export { auth, db };

@@ -135,5 +135,5 @@ const checkAuthMethod = asyncHandler(async (req, res) => {
 module.exports = {
   registerOrLoginWithPhone,
   loginWithPassword,
-v  checkAuthMethod,
+  checkAuthMethod,
 };
