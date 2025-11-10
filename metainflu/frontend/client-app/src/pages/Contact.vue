@@ -12,7 +12,7 @@
     </header>
 
     <!-- Desktop Page Header -->
-    <PageHeader v-if="!isMobile" title="Contact Us" />
+    <AppHeader v-if="!isMobile" title="Contact Us" />
 
     <main class="main-content">
       <div class="container">
