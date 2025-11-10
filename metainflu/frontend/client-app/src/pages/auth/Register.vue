@@ -1,13 +1,13 @@
 <template>
-  <div class="register-page min-h-screen bg-blue-50 flex items-center justify-center px-4 py-8">
-    <div class="max-w-sm w-full bg-white p-6 md:p-8 rounded-lg shadow-xl border border-blue-100">
+  <div class="register-page min-h-screen bg-white flex items-center justify-center px-4">
+    <div class="max-w-md w-full">
       <!-- Header -->
       <div class="text-center mb-8">
-        <router-link to="/" class="text-4xl font-extrabold text-blue-700 tracking-tight">
+        <router-link to="/" class="text-3xl font-bold text-blue-600">
           Apna Aashiyanaa
         </router-link>
-        <h1 class="text-2xl font-bold text-gray-800 mt-4 mb-2">Create Account</h1>
-        <p class="text-gray-600">Join us today</p>
+        <h1 class="text-2xl font-bold text-gray-900 mt-4 mb-2">Create an Account</h1>
+        <p class="text-gray-600">Join us by verifying your mobile number</p>
       </div>
 
       <!-- Error Message -->
@@ -15,42 +15,61 @@
         {{ error }}
       </div>
 
-      <!-- Step 1: Registration Form -->
-      <form v-if="step === 1" @submit.prevent="handleRegister" class="space-y-5">
-        <input-field v-model="form.name" id="name" label="Full Name" required />
-        <input-field v-model="form.mobile" id="mobile" label="Mobile Number" type="tel" required />
-        <input-field v-model="form.aadhaar" id="aadhaar" label="Aadhaar Number (Optional)" />
-        <input-field v-model="form.password" id="password" label="Password (Optional)" :type="showPassword ? 'text' : 'password'">
-          <template #icon>
-            <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-400 hover:text-blue-600">
-              <!-- SVG for password visibility toggle -->
-            </button>
-          </template>
-        </input-field>
-
+      <!-- Step 1: Enter Name and Mobile -->
+      <form v-if="!otpSent" @submit.prevent="handleSendOtp" class="space-y-6">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+          <input
+            id="name"
+            v-model="form.name"
+            type="text"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your full name"
+          />
+        </div>
+        <div>
+          <label for="mobile" class="block text-sm font-medium text-gray-700 mb-2">Mobile Number</label>
+          <input
+            id="mobile"
+            v-model="form.mobile"
+            type="tel"
+            required
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your mobile number"
+          />
+        </div>
+        <div id="recaptcha-container"></div>
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-semibold transition-all duration-200 ease-in-out"
+          class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
         >
           {{ loading ? 'Sending OTP...' : 'Send OTP' }}
         </button>
       </form>
 
-      <!-- Step 2: OTP Verification -->
-      <form v-if="step === 2" @submit.prevent="handleVerifyOtp" class="space-y-6">
+      <!-- Step 2: Enter OTP -->
+      <form v-if="otpSent" @submit.prevent="handleVerifyOtp" class="space-y-6">
         <p class="text-center text-gray-600">
           Enter the OTP sent to <strong>{{ form.mobile }}</strong>
         </p>
-        <input-field v-model="form.otp" id="otp" label="OTP" required text-center />
+        <input
+          id="otp"
+          v-model="form.otp"
+          type="text"
+          required
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="------"
+        />
         <button
           type="submit"
           :disabled="loading"
-          class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-semibold"
+          class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 font-semibold"
         >
-          {{ loading ? 'Verifying...' : 'Create Account' }}
+          {{ loading ? 'Verifying...' : 'Verify & Create Account' }}
         </button>
-        <button @click="step = 1" class="w-full text-sm text-gray-600 hover:underline mt-2">
+        <button @click="reset" class="w-full text-sm text-gray-600 hover:underline mt-2">
           Back
         </button>
       </form>
@@ -59,7 +78,7 @@
       <div class="mt-6 text-center">
         <p class="text-sm text-gray-600">
           Already have an account?
-          <router-link to="/auth/login" class="text-blue-600 hover:text-blue-700 font-medium">
+          <router-link to="/auth/login" class="text-blue-600 hover:underline font-medium">
             Sign in
           </router-link>
         </p>
@@ -69,47 +88,50 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import authService from '@/services/authService';
 import { useAuthStore } from '@/store/auth';
-import InputField from '../../components/InputField.vue'; // Assuming you have a reusable input field component
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-const step = ref(1); // 1: register, 2: verify otp
-
+const otpSent = ref(false);
 const form = ref({
   name: '',
   mobile: '',
-  aadhaar: '',
-  password: '',
   otp: '',
-  userId: '',
 });
 
 const loading = ref(false);
 const error = ref('');
-const showPassword = ref(false);
 
-const handleRegister = async () => {
+onMounted(() => {
+  authService.initRecaptcha();
+});
+
+const reset = () => {
+  otpSent.value = false;
+  form.value.otp = '';
+  error.value = '';
+};
+
+const handleSendOtp = async () => {
+  if (!form.value.name) {
+    error.value = 'Please enter your name.';
+    return;
+  }
   loading.value = true;
   error.value = '';
   try {
-    const userData = {
-      name: form.value.name,
-      mobile: form.value.mobile,
-      aadhaar: form.value.aadhaar,
-    };
-    if (form.value.password) {
-      userData.password = form.value.password;
+    const res = await authService.sendOTP(form.value.mobile);
+    if (res.success) {
+      otpSent.value = true;
+    } else {
+      error.value = res.message;
     }
-    const res = await authService.register(userData);
-    form.value.userId = res.userId;
-    step.value = 2;
   } catch (err) {
-    error.value = err.response?.data?.message || 'Registration failed.';
+    error.value = err.message || 'Failed to send OTP.';
   } finally {
     loading.value = false;
   }
@@ -119,13 +141,20 @@ const handleVerifyOtp = async () => {
   loading.value = true;
   error.value = '';
   try {
-    const user = await authService.verifyOTP(form.value.userId, form.value.otp);
-    authStore.setUser(user);
-    router.push('/');
+    const res = await authService.verifyOTP(form.value.otp);
+    if (res.success) {
+      authStore.setUser(res.user);
+      // Pass the name to the backend for user creation
+      await authService.updateProfile({ name: form.value.name });
+      router.push('/');
+    } else {
+      error.value = res.message;
+    }
   } catch (err) {
-    error.value = err.response?.data?.message || 'OTP verification failed.';
+    error.value = err.message || 'OTP verification failed.';
   } finally {
     loading.value = false;
   }
 };
+
 </script>

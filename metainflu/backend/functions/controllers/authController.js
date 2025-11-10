@@ -1,8 +1,9 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
+const admin = require('firebase-admin');
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
+const functions = require('firebase-functions');
 
 // Generates a JWT token for a given user ID.
 const generateToken = (id) => {
@@ -11,89 +12,56 @@ const generateToken = (id) => {
   });
 };
 
-// Generate a 6-digit OTP
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-// Send OTP (dummy function for now)
-const sendOTP = async (mobile, otp) => {
-  console.log(`Sending OTP ${otp} to ${mobile}`);
-  // TODO: Integrate with an actual SMS gateway like Twilio or MessageBird
-};
-
-// @desc    Register user with mobile + Aadhaar + Password (optional)
-// @route   POST /api/auth/register
+// @desc    Register or Login user with phone number
+// @route   POST /api/auth/phone
 // @access  Public
-const registerUser = asyncHandler(async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+const registerOrLoginWithPhone = asyncHandler(async (req, res) => => {
+  const { idToken } = req.body;
 
-  const { name, mobile, aadhaar, password } = req.body;
-
-  const userExists = await User.findByPhone(mobile);
-  if (userExists) {
+  if (!idToken) {
     res.status(400);
-    throw new Error('User already exists');
+    throw new Error('ID token is required');
   }
 
-  const otp = generateOTP();
-  await sendOTP(mobile, otp);
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { phone_number: phoneNumber, uid: firebaseUid } = decodedToken;
 
-  // Create user with default role 'buyer' (set by schema)
-  const userData = {
-    name,
-    mobile,
-    aadhaar,
-    otp,
-    otpExpires: Date.now() + 10 * 60 * 1000, // OTP valid for 10 minutes
-  };
+    let user = await User.findByFirebaseUid(firebaseUid);
 
-  // Add password if provided
-  if (password) {
-    userData.password = password;
+    if (user) {
+      // User exists, log them in
+      res.json({
+        _id: user.id,
+        name: user.name,
+        mobile: user.mobile,
+        role: user.role,
+        token: generateToken(user._id),
+      });
+    } else {
+      // User does not exist, create a new user
+      const { name } = req.body; // Or get name from other sources
+      const newUser = {
+        firebaseUid,
+        mobile: phoneNumber,
+        name,
+        role: 'user',
+      };
+      
+      const createdUser = await User.create(newUser);
+
+      res.status(201).json({
+        _id: createdUser.id,
+        name: createdUser.name,
+        mobile: createdUser.mobile,
+        role: createdUser.role,
+        token: generateToken(createdUser._id),
+      });
+    }
+  } catch (error) {
+    console.error('Error verifying ID token:', error);
+    res.status(401).send('Unauthorized');
   }
-
-  const user = await User.create(userData);
-
-  if (user) {
-    res.status(201).json({
-      message: 'OTP sent to mobile number',
-      userId: user._id,
-      hasPassword: !!password, // Indicate if user set a password
-    });
-  } else {
-    res.status(400);
-    throw new Error('Invalid user data');
-  }
-});
-
-// @desc    Login with mobile (sends OTP)
-// @route   POST /api/auth/login/otp
-// @access  Public
-const loginWithOTP = asyncHandler(async (req, res) => {
-  const { mobile } = req.body;
-
-  const user = await User.findByPhone(mobile);
-
-  if (!user) {
-    res.status(404);
-    throw new Error('User not found');
-  }
-
-  const otp = generateOTP();
-  await sendOTP(mobile, otp);
-
-  user.otp = otp;
-  user.otpExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
-  await user.save();
-
-  res.status(200).json({ 
-    message: 'OTP sent to mobile number', 
-    userId: user._id 
-  });
 });
 
 // @desc    Login with password
@@ -139,38 +107,6 @@ const loginWithPassword = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    OTP verification
-// @route   POST /api/auth/verify-otp
-// @access  Public
-const verifyOTP = asyncHandler(async (req, res) => {
-  const { userId, otp } = req.body;
-
-  const user = await User.findById(userId);
-
-  if (!user) {
-    res.status(404);
-    throw new Error('User not found');
-  }
-
-  if (user.otp !== otp || user.otpExpires < Date.now()) {
-    res.status(400);
-    throw new Error('Invalid or expired OTP');
-  }
-
-  user.otp = undefined;
-  user.otpExpires = undefined;
-  await user.save();
-
-  res.json({
-    _id: user.id,
-    name: user.name,
-    mobile: user.mobile,
-    aadhaar: user.aadhaar,
-    role: user.role,
-    token: generateToken(user._id),
-  });
-});
-
 // @desc    Check if user has password set
 // @route   POST /api/auth/check-auth-method
 // @access  Public
@@ -197,9 +133,7 @@ const checkAuthMethod = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  registerUser,
-  loginWithOTP,
+  registerOrLoginWithPhone,
   loginWithPassword,
-  verifyOTP,
-  checkAuthMethod,
+v  checkAuthMethod,
 };

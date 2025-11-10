@@ -16,16 +16,6 @@ class AuthService {
   }
   
   /**
-   * Register user with backend
-   */
-  async register({ name, mobile, aadhaar, password }) {
-    const data = { name, mobile, aadhaar };
-    if (password) data.password = password;
-    const res = await api.post('/auth/register', data);
-    return res.data;
-  }
-
-  /**
    * Initialize reCAPTCHA
    */
   initRecaptcha(containerId = 'recaptcha-container') {
@@ -78,7 +68,7 @@ class AuthService {
   }
 
   /**
-   * Verify OTP
+   * Verify OTP and log in or register the user
    */
   async verifyOTP(otp) {
     try {
@@ -86,20 +76,20 @@ class AuthService {
         throw new Error('No OTP request found. Please request OTP first.');
       }
 
-      // Verify OTP
+      // Verify OTP with Firebase
       const result = await this.confirmationResult.confirm(otp);
       const user = result.user;
+      
       // Get Firebase ID token
       const idToken = await user.getIdToken();
-      // Send to backend to create/update user
-      const response = await api.post('/auth/phone-login', {
-        firebaseUid: user.uid,
-        phoneNumber: user.phoneNumber,
-        idToken
-      });
-      // Store user data and token
+
+      // Send ID token to backend to register/login
+      const response = await api.post('/auth/phone', { idToken });
+
+      // Store user data and token from our backend
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+
       return {
         success: true,
         user: response.data.user,
@@ -111,6 +101,21 @@ class AuthService {
         success: false,
         message: error.message || 'Invalid OTP'
       };
+    }
+  }
+
+  async updateProfile(userData) {
+    try {
+      const user = this.getCurrentUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      const response = await api.put(`/users/${user._id}`, userData);
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return { success: true, user: response.data };
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return { success: false, message: error.message || 'Failed to update profile' };
     }
   }
 
@@ -133,7 +138,7 @@ class AuthService {
   }
 
   /**
-   * Get current user
+   * Get current user from local storage
    */
   getCurrentUser() {
     const userStr = localStorage.getItem('user');
@@ -141,7 +146,7 @@ class AuthService {
   }
 
   /**
-   * Get auth token
+   * Get auth token from local storage
    */
   getToken() {
     return localStorage.getItem('token');
@@ -155,7 +160,7 @@ class AuthService {
   }
 
   /**
-   * Listen to auth state changes
+   * Listen to auth state changes from Firebase
    */
   onAuthStateChange(callback) {
     return onAuthStateChanged(auth, async (user) => {
