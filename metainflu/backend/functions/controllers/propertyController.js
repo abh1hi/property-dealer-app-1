@@ -1,48 +1,28 @@
 const Property = require('../models/Property');
 const asyncHandler = require('express-async-handler');
-const mongoose = require('mongoose');
+
 const { processImages } = require('../utils/imageUpload');
 
 // @desc    Fetch all properties, optionally filtered
 // @route   GET /api/properties
 // @access  Public
 const getProperties = asyncHandler(async (req, res) => {
-  const { propertyType, minPrice, maxPrice, bedrooms, bathrooms, latitude, longitude, address, featured, limit } = req.query;
-  let filter = {};
+  const { propertyType, minPrice, maxPrice, bedrooms, bathrooms, featured, limit } = req.query;
+  
+  const filters = {
+    limit: limit ? Number(limit) : undefined,
+    propertyType: propertyType,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    bedrooms: bedrooms ? Number(bedrooms) : undefined,
+    // bathrooms: bathrooms ? Number(bathrooms) : undefined, // Property model does not have bathrooms filter
+    isFeatured: featured === 'true' ? true : undefined,
+  };
 
-  if (propertyType) {
-    filter.propertyType = propertyType;
-  }
-  if (minPrice) {
-    filter.price = { ...filter.price, $gte: Number(minPrice) };
-  }
-  if (maxPrice) {
-    filter.price = { ...filter.price, $lte: Number(maxPrice) };
-  }
-  if (bedrooms) {
-    filter.bedrooms = Number(bedrooms);
-  }
-  if (bathrooms) {
-    filter.bathrooms = Number(bathrooms);
-  }
-  if (address) {
-    filter.address = { $regex: address, $options: 'i' };
-  }
-  if (latitude && longitude) {
-    filter.latitude = Number(latitude);
-    filter.longitude = Number(longitude);
-  }
-  if (featured === 'true') {
-    filter.isFeatured = true;
-  }
+  // Remove undefined filters
+  Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
 
-  let query = Property.find(filter);
-
-  if (limit) {
-    query = query.limit(Number(limit));
-  }
-
-  const properties = await query;
+  const properties = await Property.findAll(filters);
   res.json(properties);
 });
 
@@ -274,41 +254,19 @@ const deletePropertyImage = asyncHandler(async (req, res) => {
 // @route   GET /api/properties/search
 // @access  Public
 const searchProperties = asyncHandler(async (req, res) => {
-  const { keyword, propertyType, minPrice, maxPrice, bedrooms, bathrooms, latitude, longitude, address } = req.query;
-  let filter = {};
+  const { keyword, propertyType, minPrice, maxPrice, bedrooms } = req.query;
+  
+  const filters = {
+    propertyType: propertyType,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    bedrooms: bedrooms ? Number(bedrooms) : undefined,
+  };
 
-  if (keyword) {
-    filter.$or = [
-      { title: { $regex: keyword, $options: 'i' } },
-      { description: { $regex: keyword, $options: 'i' } },
-      { address: { $regex: keyword, $options: 'i' } },
-    ];
-  }
+  // Remove undefined filters
+  Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
 
-  if (propertyType) {
-    filter.propertyType = propertyType;
-  }
-  if (minPrice) {
-    filter.price = { ...filter.price, $gte: Number(minPrice) };
-  }
-  if (maxPrice) {
-    filter.price = { ...filter.price, $lte: Number(maxPrice) };
-  }
-  if (bedrooms) {
-    filter.bedrooms = Number(bedrooms);
-  }
-  if (bathrooms) {
-    filter.bathrooms = Number(bathrooms);
-  }
-  if (address) {
-    filter.address = { $regex: address, $options: 'i' };
-  }
-  if (latitude && longitude) {
-    filter.latitude = Number(latitude);
-    filter.longitude = Number(longitude);
-  }
-
-  const properties = await Property.find(filter);
+  const properties = await Property.search(keyword, filters);
   res.json({
     success: true,
     count: properties.length,
@@ -320,7 +278,7 @@ const searchProperties = asyncHandler(async (req, res) => {
 // @route   GET /api/properties/user/my-properties
 // @access  Private
 const getUserProperties = asyncHandler(async (req, res) => {
-  const properties = await Property.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const properties = await Property.findAll({ ownerId: req.user._id, orderBy: 'createdAt', orderDirection: 'desc' });
   
   res.json({
     success: true,

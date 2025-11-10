@@ -6,7 +6,7 @@ const asyncHandler = require('express-async-handler');
 
 // Generates a JWT token for a given user ID.
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id }, functions.config().jwt.secret, {
     expiresIn: '30d',
   });
 };
@@ -33,7 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const { name, mobile, aadhaar, password } = req.body;
 
-  const userExists = await User.findOne({ mobile });
+  const userExists = await User.findByPhone(mobile);
   if (userExists) {
     res.status(400);
     throw new Error('User already exists');
@@ -76,7 +76,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginWithOTP = asyncHandler(async (req, res) => {
   const { mobile } = req.body;
 
-  const user = await User.findOne({ mobile });
+  const user = await User.findByPhone(mobile);
 
   if (!user) {
     res.status(404);
@@ -107,8 +107,7 @@ const loginWithPassword = asyncHandler(async (req, res) => {
     throw new Error('Please provide mobile and password');
   }
 
-  // Find user and include password field
-  const user = await User.findOne({ mobile }).select('+password');
+  const user = await User.findByPhone(mobile);
 
   if (!user) {
     res.status(404);
@@ -122,7 +121,7 @@ const loginWithPassword = asyncHandler(async (req, res) => {
   }
 
   // Verify password
-  const isPasswordMatch = await user.matchPassword(password);
+  const isPasswordMatch = await User.verifyPassword(password, user.password);
 
   if (!isPasswordMatch) {
     res.status(401);
@@ -183,7 +182,7 @@ const checkAuthMethod = asyncHandler(async (req, res) => {
     throw new Error('Please provide mobile number');
   }
 
-  const user = await User.findOne({ mobile }).select('+password');
+  const user = await User.findByPhone(mobile);
 
   if (!user) {
     res.status(404);

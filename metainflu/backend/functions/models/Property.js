@@ -91,7 +91,8 @@ class Property {
         limit = 50,
         startAfter = null,
         orderBy = 'createdAt',
-        orderDirection = 'desc'
+        orderDirection = 'desc',
+        isFeatured // Add isFeatured filter
       } = filters;
 
       let query = this.collection.where('status', '==', status);
@@ -111,6 +112,10 @@ class Property {
 
       if (bedrooms) {
         query = query.where('bedrooms', '==', parseInt(bedrooms));
+      }
+
+      if (isFeatured !== undefined) { // Apply isFeatured filter
+        query = query.where('isFeatured', '==', isFeatured);
       }
 
       // Note: Firestore doesn't support multiple range queries on different fields
