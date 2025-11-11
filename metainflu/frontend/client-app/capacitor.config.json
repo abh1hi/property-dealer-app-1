@@ -1,16 +1,8 @@
 {
-  "appId": "com.apnaaashiana.app",
-  "appName": "ashianaapp",
+  "appId": "com.property.app",
+  "appName": "property-dealer-app-1",
   "webDir": "dist",
-  "bundledWebRuntime": false,
-  "server": {
-    "url": "https://3czzqk3l-5173.use2.devtunnels.ms",
-    "androidScheme": "https",
-    "allowNavigation": [
-      "*"
-    ],
-    "cleartext": true
-  },
+  "bundledWebRuntime": true,
   "plugins": {
     "CapacitorHttp": {
       "enabled": true

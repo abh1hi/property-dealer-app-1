@@ -56,10 +56,10 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
-import { useFavoriteStore } from '@/store/favorites'
+import { useFavoritesStore } from '@/store/favorites'
 import PropertyCard from '@/components/PropertyCard.vue'
 
-const favoriteStore = useFavoriteStore()
+const favoriteStore = useFavoritesStore()
 
 const favorites = computed(() => favoriteStore.favorites)
 const loading = computed(() => favoriteStore.loading)

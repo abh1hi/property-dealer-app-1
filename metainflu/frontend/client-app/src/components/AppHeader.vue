@@ -6,8 +6,8 @@
         <!-- Logo -->
         <div class="flex-shrink-0">
           <router-link to="/" class="flex items-center space-x-2">
-            <img src="/media/icon.jpg" alt="Apna Aashiyanaa" class="w-8 h-8 rounded-full">
-            <span class="text-xl font-semibold text-on-surface">Apna Aashiyanaa</span>
+            <img src="/media/icon.jpg" alt="Apna Aashiyanaa" class="w-12 h-12 square-full">
+            <span class="text-xl font-semibold text-primary">Apna Aashiyanaa</span>
           </router-link>
         </div>
 
