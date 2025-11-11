@@ -1,50 +1,64 @@
 <template>
-  <div class="bg-surface rounded-2xl shadow-lg overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-2 flex flex-col h-full">
+  <div class="bg-surface rounded-2xl shadow-lg overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 flex flex-col h-full group">
     <!-- Image Section -->
-    <div class="relative">
-      <img :src="property.images[0] || 'https://via.placeholder.com/400x250'" :alt="property.title" class="w-full h-48 object-cover">
-      <div class="absolute top-3 left-3 bg-surface/90 px-3 py-1 rounded-full text-xs font-semibold text-on-surface capitalize">
-        {{ property.type }}
+    <div class="relative overflow-hidden">
+      <img :src="property.images[0] || 'https://via.placeholder.com/400x250'" :alt="property.title" class="w-full h-52 object-cover transition-transform duration-500 ease-in-out group-hover:scale-105">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+
+      <div class="absolute top-3 left-3 bg-primary/90 px-3 py-1 rounded-full text-xs font-bold text-on-primary uppercase tracking-wider">
+        For {{ property.type }}
       </div>
-      <button @click.stop.prevent="toggleFavorite" class="absolute top-3 right-3 text-white rounded-full p-2 transition-colors duration-200" :class="isFavorite ? 'bg-red-500/90' : 'bg-black/50 hover:bg-red-500/80'">
-        <i class="fas fa-heart"></i>
+      
+      <button @click.stop.prevent="toggleFavorite" class="absolute top-3 right-3 text-white rounded-full p-2.5 transition-all duration-300 ease-in-out" :class="isFavorite ? 'bg-error/90' : 'bg-black/50 hover:bg-error/80'">
+        <i class="fas fa-heart transform transition-transform duration-200" :class="isFavorite ? 'scale-110' : 'group-hover:scale-110'"></i>
       </button>
+
+      <div class="absolute bottom-0 left-0 p-4 w-full">
+        <h3 class="font-bold text-xl text-white leading-tight truncate">{{ property.title }}</h3>
+        <p class="text-sm text-gray-300 flex items-center mt-1">
+          <i class="fas fa-map-marker-alt text-xs mr-2"></i>
+          <span>{{ property.location.address }}</span>
+        </p>
+      </div>
     </div>
     
     <!-- Content Section -->
     <div class="p-4 flex-grow flex flex-col">
-      <!-- Title and Price -->
-      <div class="flex justify-between items-start mb-2">
-        <h3 class="font-semibold text-lg text-on-surface leading-tight truncate mr-2">{{ property.title }}</h3>
-        <p class="font-bold text-lg text-primary flex-shrink-0">${{ Number(property.price).toLocaleString() }}</p>
+      <!-- Price -->
+      <div class="mb-3">
+        <p class="font-extrabold text-2xl text-primary">${{ Number(property.price).toLocaleString() }}</p>
       </div>
-
-      <!-- Location -->
-      <p class="text-sm text-secondary mb-3 flex items-center">
-        <i class="fas fa-map-marker-alt text-xs mr-2"></i>
-        <span>{{ property.location.city }}, {{ property.location.state }}</span>
-      </p>
-
-      <!-- Spacer -->
-      <div class="flex-grow"></div>
 
       <!-- Key Features -->
-      <div class="flex justify-around items-center text-sm text-secondary border-t border-outline pt-3 mt-auto">
+      <div class="grid grid-cols-3 gap-2 text-center border-y border-outline py-3 mb-4">
         <div class="feature-item">
-          <i class="fas fa-bed text-base mr-1.5"></i>
-          <span>{{ property.bedrooms }} beds</span>
+          <i class="fas fa-bed text-xl mb-1 text-primary-variant"></i>
+          <p class="text-sm font-semibold text-on-surface-variant">{{ property.bedrooms }} beds</p>
         </div>
         <div class="feature-item">
-          <i class="fas fa-bath text-base mr-1.5"></i>
-          <span>{{ property.bathrooms }} baths</span>
+          <i class="fas fa-bath text-xl mb-1 text-primary-variant"></i>
+          <p class="text-sm font-semibold text-on-surface-variant">{{ property.bathrooms }} baths</p>
         </div>
         <div class="feature-item">
-          <i class="fas fa-ruler-combined text-base mr-1.5"></i>
-          <span>{{ property.area }} sqft</span>
+          <i class="fas fa-ruler-combined text-xl mb-1 text-primary-variant"></i>
+          <p class="text-sm font-semibold text-on-surface-variant">{{ property.area }} sqft</p>
         </div>
       </div>
+      
+      <!-- Agent & Action -->
+      <div class="mt-auto flex items-center">
+        <div class="flex items-center mr-4">
+          <img :src="property.agent.avatar" alt="Agent" class="w-10 h-10 rounded-full mr-3 border-2 border-primary-variant">
+          <div>
+            <p class="font-semibold text-sm text-on-surface">{{ property.agent.name }}</p>
+            <p class="text-xs text-secondary">Listing Agent</p>
+          </div>
+        </div>
+        <button class="ml-auto px-5 py-2.5 rounded-full bg-primary text-on-primary font-bold text-sm shadow-md hover:bg-primary-variant transition-all duration-300 ease-in-out transform hover:scale-105">
+          Details
+        </button>
+      </div>
     </div>
-
   </div>
 </template>
 
@@ -61,12 +75,11 @@ const props = defineProps({
 
 const authStore = useAuthStore();
 
-// This is a placeholder for actual favorite logic
-const isFavorite = computed(() => false);
+// Placeholder for actual favorite logic
+const isFavorite = computed(() => props.property.featured); // Example logic
 
 const toggleFavorite = () => {
   if (!authStore.isAuthenticated) {
-    // Or trigger a login modal
     alert('Please log in to add favorites');
     return;
   }
@@ -77,6 +90,6 @@ const toggleFavorite = () => {
 
 <style scoped>
 .feature-item {
-  @apply flex items-center text-on-surface-variant;
+  @apply flex flex-col items-center;
 }
 </style>
