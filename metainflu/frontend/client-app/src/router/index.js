@@ -118,6 +118,7 @@ const router = createRouter({
 })
 
 // Navigation Guards
+/*
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   
@@ -143,5 +144,11 @@ router.beforeEach(async (to, from, next) => {
   
   next()
 })
+*/
+
+// Temporarily disable navigation guards for development
+router.beforeEach((to, from, next) => {
+  next();
+});
 
 export default router

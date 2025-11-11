@@ -4,8 +4,9 @@
   'protect' verifies the JWT, 'admin' checks for admin role, 'buyer' checks for buyer role,
   and 'seller' checks for seller role.
 */
+/*
 const jwt = require('jsonwebtoken');
-const asyncHandler = require('express-async-handler');
+const asyncHandler = require = ('express-async-handler');
 const User = require('../models/User');
 
 // Middleware to protect routes by verifying a JWT.
@@ -71,5 +72,19 @@ const buyerOrSeller = (req, res, next) => {
     throw new Error('Not authorized as a buyer or seller');
   }
 };
+
+module.exports = { protect, admin, buyer, seller, buyerOrSeller };
+*/
+
+// Temporarily disable authentication for development
+const protect = (req, res, next) => {
+  // For development purposes, you might want to mock a user here
+  // req.user = { id: 'mockUserId', role: 'admin' };
+  next();
+};
+const admin = (req, res, next) => next();
+const buyer = (req, res, next) => next();
+const seller = (req, res, next) => next();
+const buyerOrSeller = (req, res, next) => next();
 
 module.exports = { protect, admin, buyer, seller, buyerOrSeller };
