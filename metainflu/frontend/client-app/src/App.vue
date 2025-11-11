@@ -1,6 +1,7 @@
 <template>
   <div id="app" class="bg-background text-on-background min-h-screen flex flex-col">
     <AppHeader />
+    <MobileSidebar />
     
     <main class="flex-grow pb-20 md:pb-0">
       <router-view v-slot="{ Component }">
@@ -17,6 +18,7 @@
 
 <script setup>
 import AppHeader from '@/components/AppHeader.vue';
+import MobileSidebar from '@/components/MobileSidebar.vue';
 import AppFooter from '@/components/AppFooter.vue';
 import BottomNavBar from '@/components/BottomNavBar.vue';
 </script>

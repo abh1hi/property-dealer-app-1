@@ -6,10 +6,7 @@
         <!-- Logo -->
         <div class="flex-shrink-0">
           <router-link to="/" class="flex items-center space-x-2">
-            <svg class="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 7V21H22V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 15V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <img src="/media/icon.jpg" alt="Apna Aashiyanaa" class="w-8 h-8 rounded-full">
             <span class="text-xl font-semibold text-on-surface">Apna Aashiyanaa</span>
           </router-link>
         </div>
@@ -64,7 +61,7 @@
           
           <!-- Mobile Menu Button -->
           <div class="md:hidden">
-            <button class="focus:outline-none">
+            <button @click="uiStore.toggleSidebar" class="focus:outline-none">
                 <i class="fas fa-bars text-xl"></i>
             </button>
           </div>
@@ -79,10 +76,12 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useAuthStore } from '@/store/auth';
+import { useUIStore } from '@/store/ui';
 import { useRouter } from 'vue-router';
 import vClickOutside from '@/directives/clickOutside';
 
 const authStore = useAuthStore();
+const uiStore = useUIStore();
 const router = useRouter();
 
 const isUserMenuOpen = ref(false);

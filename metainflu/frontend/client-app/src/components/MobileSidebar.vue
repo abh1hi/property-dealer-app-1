@@ -1,18 +1,13 @@
 <template>
   <div class="md:hidden">
-    <!-- Hamburger Button -->
-    <button @click="isOpen = true" class="fixed top-4 left-4 z-40 w-12 h-12 flex items-center justify-center bg-surface rounded-full text-on-surface shadow-lg">
-      <i class="fas fa-bars text-xl"></i>
-    </button>
-
     <!-- Overlay -->
     <transition name="fade">
-      <div v-if="isOpen" @click="isOpen = false" class="fixed inset-0 bg-black/60 z-40"></div>
+      <div v-if="uiStore.isSidebarOpen" @click="uiStore.closeSidebar" class="fixed inset-0 bg-black/60 z-40"></div>
     </transition>
 
     <!-- Sidebar Panel -->
     <transition name="slide">
-      <aside v-if="isOpen" class="fixed top-0 left-0 w-72 h-full bg-surface text-on-surface z-50 flex flex-col">
+      <aside v-if="uiStore.isSidebarOpen" class="fixed top-0 left-0 w-72 h-full bg-surface text-on-surface z-50 flex flex-col">
         <!-- Header -->
         <div class="p-5 border-b border-outline">
           <h2 class="text-2xl font-bold text-primary">Apna Aashiyanaa</h2>
@@ -20,7 +15,7 @@
 
         <!-- Navigation Links -->
         <nav class="flex-1 py-4 px-2 space-y-2">
-          <router-link v-for="link in navLinks" :key="link.name" :to="link.path" @click="isOpen = false" class="nav-link">
+          <router-link v-for="link in navLinks" :key="link.name" :to="link.path" @click="uiStore.closeSidebar" class="nav-link">
             <i :class="link.icon" class="w-6 text-center"></i>
             <span>{{ link.name }}</span>
           </router-link>
@@ -46,11 +41,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { useUIStore } from '@/store/ui';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'vue-router';
 
-const isOpen = ref(false);
+const uiStore = useUIStore();
 const authStore = useAuthStore();
 const router = useRouter();
 
@@ -66,7 +61,7 @@ const navLinks = [
 ];
 
 const handleLogout = async () => {
-    isOpen.value = false;
+    uiStore.closeSidebar();
     await authStore.logout();
     router.push('/');
 }
