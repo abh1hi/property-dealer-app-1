@@ -1,5 +1,9 @@
 const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
+// For prod cloud storage upload (commented for emulator/dev)
+// const { Storage } = require('@google-cloud/storage');
+// const path = require('path');
+// const storage = new Storage(); // Uses GOOGLE_APPLICATION_CREDENTIALS env var
 
 /**
  * Compress and optimize image buffer
@@ -14,24 +18,18 @@ const compressImage = async (buffer, options = {}) => {
       quality = 80,
       format = 'webp'
     } = options;
-
-    // PATCH: BUFFER SAFETY CHECK
     if (!buffer || !(buffer instanceof Buffer) || buffer.length === 0) {
       throw new Error('Invalid image input: input is not a non-empty Buffer');
     }
-
-    // PATCH: CHECK IMAGE FORMAT BEFORE SHARP
     let metadata;
     try {
       metadata = await sharp(buffer).metadata();
     } catch (metaErr) {
       throw new Error('Unable to get image metadata, likely non-image file: ' + metaErr.message);
     }
-
     let compressed = buffer;
     let currentQuality = quality;
     let outputBuffer;
-
     while (currentQuality >= 20) {
       if (format === 'webp') {
         outputBuffer = await sharp(compressed)
@@ -60,6 +58,24 @@ const compressImage = async (buffer, options = {}) => {
         .webp({ quality: 70 })
         .toBuffer();
     }
+    // --- STORAGE UPLOAD SECTION (Commented for emulator) ---
+    /*
+    // Upload to Firebase Storage in 'properties/' with unique filename based on UUID
+    const filename = `${uuidv4()}.${format}`;
+    const filePath = `properties/${filename}`;
+    const bucket = storage.bucket();
+    const file = bucket.file(filePath);
+    await file.save(outputBuffer, { contentType: `image/${format}` });
+    // Optionally make public or add token for download URLs
+    // const url = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+    // return {
+    //   success: true,
+    //   url,
+    //   ...
+    // };
+    */
+    // --- END STORAGE UPLOAD SECTION ---
+    // For now, just return the data URL for emulator compatibility
     const base64Image = `data:image/${format};base64,${outputBuffer.toString('base64')}`;
     return {
       success: true,
@@ -67,9 +83,10 @@ const compressImage = async (buffer, options = {}) => {
       size: outputBuffer.length,
       originalSize: buffer.length,
       compressionRatio: ((1 - outputBuffer.length / buffer.length) * 100).toFixed(2) + '%',
-      format: format,
+      format,
       width: metadata.width,
-      height: metadata.height
+      height: metadata.height,
+      // url, // future: uncomment field returned from upload section
     };
   } catch (error) {
     console.error('Image compression error:', error);
@@ -79,12 +96,11 @@ const compressImage = async (buffer, options = {}) => {
     };
   }
 };
-
 /**
  * Process multiple images
  * @param {Array} files - Array of multer file objects
  * @param {Object} options - Compression options
- * @returns {Promise<Array>} - Array of processed images
+ * @returns {Promise<Array>} - Array of processed images (URLs or data URLs for emulator)
  */
 const processImages = async (files, options = {}) => {
   if (!files || files.length === 0) {
@@ -92,7 +108,6 @@ const processImages = async (files, options = {}) => {
   }
   const processedImages = [];
   for (const file of files) {
-    // PATCH: FILE INTEGRITY CHECK
     if (!file || !file.buffer || !file.mimetype || file.buffer.length === 0) {
       console.warn('processImages skipped invalid file:', file && file.originalname);
       continue;
@@ -105,6 +120,7 @@ const processImages = async (files, options = {}) => {
     if (result.success) {
       processedImages.push({
         id: uuidv4(),
+        // url: result.url, // for prod Storage use
         data: result.data,
         size: result.size,
         originalSize: result.originalSize,
@@ -116,12 +132,6 @@ const processImages = async (files, options = {}) => {
   }
   return processedImages;
 };
-
-/**
- * Validate image file
- * @param {Object} file - Multer file object
- * @returns {Boolean} - True if valid
- */
 const isValidImage = (file) => {
   const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   return !!(file && allowedMimes.includes(file.mimetype));
