@@ -339,7 +339,7 @@ export default {
         if (response.success) {
           this.$router.push({
             name: 'PropertySuccess',
-            params: { id: response.data._id }
+    params: { id: response.data.id } // change from _id to id
           });
         }
       } catch (error) {
