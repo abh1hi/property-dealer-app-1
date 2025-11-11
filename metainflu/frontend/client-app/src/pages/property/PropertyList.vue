@@ -11,12 +11,6 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       
-      <!-- Content Header -->
-      <div class="mb-6">
-        <h1 class="text-3xl font-bold text-on-surface">Find Your Next Home</h1>
-        <p class="text-on-surface-variant mt-1">{{ loading ? 'Searching for properties...' : `${totalProperties} properties found` }}</p>
-      </div>
-
       <!-- Property Grid -->
       <div>
         <!-- Loading State -->

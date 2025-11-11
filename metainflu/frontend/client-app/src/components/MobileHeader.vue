@@ -1,17 +1,18 @@
 <template>
   <header class="fixed top-0 left-0 right-0 z-30 bg-surface/80 backdrop-blur-sm md:hidden" style="padding-top: env(safe-area-inset-top);">
     <div class="flex items-center justify-between h-16 px-4">
+      <!-- Back Button -->
+      <button v-if="!isHomePage" @click="$router.back()" class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface">
+        <i class="fas fa-arrow-left text-xl"></i>
+      </button>
       <!-- Hamburger Button -->
-      <button @click="uiStore.toggleSidebar" class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface">
+      <button v-else @click="uiStore.toggleSidebar" class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface">
         <i class="fas fa-bars text-xl"></i>
       </button>
 
-      <!-- Logo -->
+      <!-- Page Title -->
       <div class="text-lg font-bold text-primary">
-        <router-link to="/" class="flex items-center">
-          <img src="/media/icon.jpg" alt="Apna Aashiyanaa" class="h-8 w-auto mr-2">
-          <span>Apna Aashiyanaa</span>
-        </router-link>
+        {{ currentPageTitle }}
       </div>
 
       <!-- User/Action Button -->
@@ -28,9 +29,18 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useUIStore } from '@/store/ui';
 import { useAuthStore } from '@/store/auth';
 
+const route = useRoute();
 const uiStore = useUIStore();
 const authStore = useAuthStore();
+
+const isHomePage = computed(() => route.path === '/');
+
+const currentPageTitle = computed(() => {
+  return route.meta.title || 'Apna Aashiyanaa';
+});
 </script>

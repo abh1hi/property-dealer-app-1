@@ -2,12 +2,7 @@
   <div class="favorites-page min-h-screen bg-background text-on-background">
 
     <!-- Page Header -->
-    <div class="sticky top-16 md:top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <h1 class="text-2xl font-bold text-on-surface">My Favorites</h1>
-            <p class="text-on-surface-variant text-sm mt-1">Your collection of saved properties.</p>
-        </div>
-    </div>
+    
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
