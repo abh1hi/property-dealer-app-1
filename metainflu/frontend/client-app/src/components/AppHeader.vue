@@ -1,19 +1,23 @@
 <template>
-  <header class="bg-surface shadow-md sticky top-0 z-40">
+  <header class="bg-surface sticky top-0 z-40 shadow-sm">
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-20">
+      <div class="flex items-center justify-between h-16">
         
         <!-- Logo -->
         <div class="flex-shrink-0">
-          <router-link to="/" class="text-2xl font-bold text-primary">
-            Apna Aashiyanaa
+          <router-link to="/" class="flex items-center space-x-2">
+            <svg class="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7V21H22V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 15V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="text-xl font-semibold text-on-surface">Apna Aashiyanaa</span>
           </router-link>
         </div>
 
         <!-- Desktop Navigation -->
-        <div class="hidden md:flex md:items-center md:space-x-8">
+        <div class="hidden md:flex md:items-center md:space-x-6">
           <router-link v-for="item in navItems" :key="item.path" :to="item.path" 
-            class="text-on-surface hover:text-primary transition-colors duration-200 font-medium"
+            class="font-medium text-on-surface-variant hover:text-primary transition-colors duration-200"
             active-class="text-primary">
             {{ item.name }}
           </router-link>
@@ -24,18 +28,30 @@
           
           <!-- User Menu -->
           <div v-if="authStore.isAuthenticated" class="relative">
-            <button @click="toggleUserMenu" class="flex items-center space-x-2 focus:outline-none">
+            <button @click="toggleUserMenu" class="focus:outline-none">
               <img :src="userAvatar" alt="User avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary-variant">
-              <span class="hidden lg:block font-medium text-on-surface">{{ authStore.user.name }}</span>
-              <i class="fas fa-chevron-down text-xs text-secondary"></i>
             </button>
 
             <!-- User Dropdown -->
             <transition name="fade-down">
-              <div v-if="isUserMenuOpen" v-click-outside="closeUserMenu" class="absolute right-0 mt-2 w-48 bg-surface rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 origin-top-right">
-                <router-link to="/profile" class="dropdown-item">My Profile</router-link>
-                <router-link to="/my-favorites" class="dropdown-item">My Favorites</router-link>
-                <a href="#" @click.prevent="handleLogout" class="dropdown-item">Sign Out</a>
+              <div v-if="isUserMenuOpen" v-click-outside="closeUserMenu" class="absolute right-0 mt-2 w-56 bg-surface rounded-lg shadow-xl py-2 ring-1 ring-black ring-opacity-5 origin-top-right">
+                <div class="px-4 py-3 border-b border-outline">
+                  <p class="text-sm font-semibold text-on-surface">{{ authStore.user.name }}</p>
+                  <p class="text-xs text-on-surface-variant truncate">{{ authStore.user.email }}</p>
+                </div>
+                <router-link to="/profile" class="dropdown-item">
+                  <i class="fas fa-user-circle w-5 mr-3"></i>My Profile
+                </router-link>
+                <router-link to="/my-listings" class="dropdown-item">
+                  <i class="fas fa-list-alt w-5 mr-3"></i>My Listings
+                </router-link>
+                <router-link to="/my-favorites" class="dropdown-item">
+                  <i class="fas fa-heart w-5 mr-3"></i>My Favorites
+                </router-link>
+                <div class="border-t border-outline my-1"></div>
+                <a href="#" @click.prevent="handleLogout" class="dropdown-item text-error">
+                  <i class="fas fa-sign-out-alt w-5 mr-3"></i>Sign Out
+                </a>
               </div>
             </transition>
           </div>
@@ -45,12 +61,18 @@
             <router-link to="/auth/login" class="btn-secondary">Log In</router-link>
             <router-link to="/auth/register" class="btn-primary">Sign Up</router-link>
           </div>
+          
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden">
+            <button class="focus:outline-none">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
 
         </div>
 
       </div>
     </nav>
-
   </header>
 </template>
 
@@ -68,7 +90,6 @@ const isUserMenuOpen = ref(false);
 const navItems = [
   { name: 'For Sale', path: '/search' },
   { name: 'For Rent', path: '/search?type=rent' },
-  { name: 'Agents', path: '/agents' },
   { name: 'About', path: '/about' },
   { name: 'Contact', path: '/contact' },
 ];
@@ -88,7 +109,7 @@ const handleLogout = () => {
 
 <style scoped>
 .dropdown-item {
-  @apply block px-4 py-2 text-sm text-on-surface hover:bg-surface-variant hover:text-primary transition-colors;
+  @apply flex items-center px-4 py-2 text-sm text-on-surface hover:bg-surface-variant transition-colors duration-150;
 }
 
 .fade-down-enter-active, .fade-down-leave-active {
@@ -100,9 +121,9 @@ const handleLogout = () => {
 }
 
 .btn-primary {
-    @apply bg-primary text-on-primary font-semibold py-2 px-5 rounded-full transition duration-200 hover:bg-opacity-90;
+    @apply bg-primary text-on-primary font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:-translate-y-0.5;
 }
 .btn-secondary {
-    @apply bg-secondary-container text-on-secondary-container font-semibold py-2 px-5 rounded-full transition duration-200 hover:bg-opacity-90;
+    @apply bg-surface-variant text-on-surface-variant font-semibold py-2 px-6 rounded-full transition duration-300 ease-in-out hover:bg-primary-container;
 }
 </style>

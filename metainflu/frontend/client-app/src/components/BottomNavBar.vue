@@ -1,10 +1,21 @@
 <template>
-  <div class="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface border-t border-outline shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
-    <div class="max-w-md mx-auto h-full flex justify-around items-center px-2">
-      <router-link v-for="item in navItems" :key="item.path" :to="item.path" class="nav-item" active-class="text-primary">
-        <i :class="item.icon" class="text-2xl mb-1"></i>
-        <span class="text-xs font-medium tracking-tight">{{ item.name }}</span>
+  <div class="md:hidden fixed bottom-0 inset-x-0 z-50 pb-3 pt-2">
+    <div class="max-w-sm mx-auto h-16 bg-surface/80 backdrop-blur-sm rounded-full shadow-lg flex justify-evenly items-center px-2">
+      
+      <router-link v-for="item in navItemsLeft" :key="item.path" :to="item.path" class="nav-item" active-class="active">
+        <i :class="item.icon" class="text-xl transition-transform duration-200"></i>
+        <span class="text-[10px] font-medium mt-1">{{ item.name }}</span>
       </router-link>
+
+      <router-link to="/add-property" class="fab">
+        <i class="fas fa-plus text-2xl"></i>
+      </router-link>
+
+      <router-link v-for="item in navItemsRight" :key="item.path" :to="item.path" class="nav-item" active-class="active">
+        <i :class="item.icon" class="text-xl transition-transform duration-200"></i>
+        <span class="text-[10px] font-medium mt-1">{{ item.name }}</span>
+      </router-link>
+      
     </div>
   </div>
 </template>
@@ -12,21 +23,32 @@
 <script setup>
 import { ref } from 'vue';
 
-const navItems = ref([
+const navItemsLeft = ref([
   { name: 'Home', path: '/', icon: 'fas fa-home' },
-  { name: 'Search', path: '/search', icon: 'fas fa-search' },
-  { name: 'Favorites', path: '/my-favorites', icon: 'fas fa-heart' },
-  { name: 'Profile', path: '/profile', icon: 'fas fa-user-circle' },
+  { name: 'Explore', path: '/search', icon: 'fas fa-compass' },
 ]);
+
+const navItemsRight = ref([
+  { name: 'Favorites', path: '/my-favorites', icon: 'fas fa-heart' },
+  { name: 'Profile', path: '/profile', icon: 'fas fa-user' },
+]);
+
 </script>
 
 <style scoped>
 .nav-item {
-  @apply flex flex-col items-center justify-center text-secondary hover:text-primary transition-colors duration-200 w-16;
+  @apply flex flex-col items-center justify-center text-on-surface-variant/70 hover:text-primary transition-all duration-300 w-16 h-full;
 }
 
-/* Exact active link styling */
-.router-link-exact-active {
-    @apply text-primary;
+.nav-item.router-link-exact-active {
+  @apply text-primary;
+}
+
+.nav-item.router-link-exact-active i {
+  @apply scale-110;
+}
+
+.fab {
+  @apply w-14 h-14 bg-gradient-to-br from-primary to-primary-variant rounded-full flex items-center justify-center text-on-primary shadow-lg -mt-10 transform transition-transform duration-300 hover:scale-110 hover:rotate-6;
 }
 </style>
