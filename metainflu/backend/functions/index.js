@@ -2,6 +2,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
+const filesUploadMiddleware = require("./middleware/filesUploadMiddleware");
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -11,6 +12,7 @@ const app = express();
 
 // Middleware
 app.use(cors({origin: true}));
+app.use(filesUploadMiddleware); // Use custom file upload middleware
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 

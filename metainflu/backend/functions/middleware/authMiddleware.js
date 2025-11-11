@@ -79,7 +79,7 @@ module.exports = { protect, admin, buyer, seller, buyerOrSeller };
 // Temporarily disable authentication for development
 const protect = (req, res, next) => {
   // For development purposes, you might want to mock a user here
-  // req.user = { id: 'mockUserId', role: 'admin' };
+  req.user = { _id: 'mockUserId', role: 'seller' }; // Mock user for development
   next();
 };
 const admin = (req, res, next) => next();

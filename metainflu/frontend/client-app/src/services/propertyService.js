@@ -38,8 +38,8 @@ export const createProperty = async (formData) => {
   try {
     const response = await axios.post(`${API_URL}/properties`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${getAuthToken()}`
+        'Authorization': `Bearer ${getAuthToken()}`,
+        'Content-Type': 'multipart/form-data'
       }
     });
     return response.data;
@@ -59,7 +59,6 @@ export const updateProperty = async (id, formData) => {
   try {
     const response = await axios.put(`${API_URL}/properties/${id}`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
         'Authorization': `Bearer ${getAuthToken()}`
       }
     });
@@ -88,7 +87,6 @@ export const uploadPropertyImages = async (propertyId, images) => {
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${getAuthToken()}`
         }
       }
