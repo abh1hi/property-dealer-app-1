@@ -4,9 +4,6 @@
 
       <!-- Header -->
       <div class="text-center mb-8">
-        <button @click="$router.back()" class="absolute left-4 top-4 w-10 h-10 flex items-center justify-center bg-surface rounded-full text-on-surface-variant a md:hidden">
-            <i class="fas fa-arrow-left"></i>
-        </button>
         <h1 class="text-3xl font-bold text-on-surface">List Your Property</h1>
         <p class="text-on-surface-variant mt-2">Follow the steps to get your property listed.</p>
       </div>

@@ -2,7 +2,7 @@
   <div class="property-list-page min-h-screen bg-background text-on-background">
     
     <!-- Sticky Header with Filters -->
-    <div class="sticky top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm">
+    <div class="sticky top-16 md:top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <FilterBar @filtersChanged="handleFiltersChanged" class="py-3"/>
       </div>

@@ -2,7 +2,7 @@
   <div class="notifications-page min-h-screen bg-background text-on-background">
     
     <!-- Page Header -->
-    <div class="sticky top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm">
+    <div class="sticky top-16 md:top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-on-surface">Notifications</h1>
             <button @click="markAllAsRead" class="text-sm font-semibold text-primary hover:underline" :disabled="unreadCount === 0">
