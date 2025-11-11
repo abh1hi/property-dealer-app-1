@@ -15,14 +15,23 @@ const compressImage = async (buffer, options = {}) => {
       format = 'webp'
     } = options;
 
-    // Get image metadata
-    const metadata = await sharp(buffer).metadata();
-    
+    // PATCH: BUFFER SAFETY CHECK
+    if (!buffer || !(buffer instanceof Buffer) || buffer.length === 0) {
+      throw new Error('Invalid image input: input is not a non-empty Buffer');
+    }
+
+    // PATCH: CHECK IMAGE FORMAT BEFORE SHARP
+    let metadata;
+    try {
+      metadata = await sharp(buffer).metadata();
+    } catch (metaErr) {
+      throw new Error('Unable to get image metadata, likely non-image file: ' + metaErr.message);
+    }
+
     let compressed = buffer;
     let currentQuality = quality;
     let outputBuffer;
 
-    // Try to compress image to target size
     while (currentQuality >= 20) {
       if (format === 'webp') {
         outputBuffer = await sharp(compressed)
@@ -37,31 +46,21 @@ const compressImage = async (buffer, options = {}) => {
           .png({ quality: currentQuality, compressionLevel: 9 })
           .toBuffer();
       }
-
-      // Check if size is acceptable
       if (outputBuffer.length <= maxSizeInBytes) {
         break;
       }
-
-      // Reduce quality for next iteration
       currentQuality -= 10;
     }
-
-    // If still too large, resize the image
     if (outputBuffer.length > maxSizeInBytes) {
       const scaleFactor = Math.sqrt(maxSizeInBytes / outputBuffer.length);
       const newWidth = Math.floor(metadata.width * scaleFactor);
       const newHeight = Math.floor(metadata.height * scaleFactor);
-
       outputBuffer = await sharp(compressed)
         .resize(newWidth, newHeight, { fit: 'inside' })
         .webp({ quality: 70 })
         .toBuffer();
     }
-
-    // Convert to base64
     const base64Image = `data:image/${format};base64,${outputBuffer.toString('base64')}`;
-
     return {
       success: true,
       data: base64Image,
@@ -91,12 +90,18 @@ const processImages = async (files, options = {}) => {
   if (!files || files.length === 0) {
     return [];
   }
-
   const processedImages = [];
-
   for (const file of files) {
+    // PATCH: FILE INTEGRITY CHECK
+    if (!file || !file.buffer || !file.mimetype || file.buffer.length === 0) {
+      console.warn('processImages skipped invalid file:', file && file.originalname);
+      continue;
+    }
+    if (!isValidImage(file)) {
+      console.warn('processImages rejected file not valid image:', file && file.mimetype, file && file.originalname);
+      continue;
+    }
     const result = await compressImage(file.buffer, options);
-    
     if (result.success) {
       processedImages.push({
         id: uuidv4(),
@@ -109,7 +114,6 @@ const processImages = async (files, options = {}) => {
       });
     }
   }
-
   return processedImages;
 };
 
@@ -120,7 +124,7 @@ const processImages = async (files, options = {}) => {
  */
 const isValidImage = (file) => {
   const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  return allowedMimes.includes(file.mimetype);
+  return !!(file && allowedMimes.includes(file.mimetype));
 };
 
 module.exports = {
