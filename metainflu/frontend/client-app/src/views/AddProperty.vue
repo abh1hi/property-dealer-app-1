@@ -321,14 +321,17 @@ export default {
       try {
         const formData = new FormData();
         
-        // Append all form fields
-        Object.keys(this.formData).forEach(key => {
-          if (key === 'amenities') {
-            formData.append(key, JSON.stringify(this.formData[key]));
-          } else if (this.formData[key] !== null && this.formData[key] !== '') {
-            formData.append(key, this.formData[key]);
-          }
-        });
+Object.keys(this.formData).forEach(key => {
+  if (key === 'amenities') {
+    // Send each amenity individually
+    this.formData[key].forEach(amenity => {
+      formData.append('amenities[]', amenity);  // ✅ CORRECT
+    });
+  } else if (this.formData[key] !== null && this.formData[key] !== '') {
+    formData.append(key, this.formData[key]);
+  }
+});
+
         
         // Append images
         this.selectedImages.forEach(image => {
