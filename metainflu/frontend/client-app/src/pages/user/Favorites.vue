@@ -1,114 +1,76 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto">
-      <!-- Page Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">My Favorites</h1>
-        <p class="mt-2 text-gray-600">Properties you've saved for later</p>
-      </div>
+  <div class="favorites-page min-h-screen bg-background text-on-background">
 
-      <!-- Loading State -->
-      <div v-if="loading" class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-
-      <!-- Empty State -->
-      <div v-else-if="favorites.length === 0" class="text-center py-12">
-        <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-        <h3 class="mt-4 text-lg font-medium text-gray-900">No favorites yet</h3>
-        <p class="mt-2 text-gray-500">Start adding properties to your favorites!</p>
-        <div class="mt-6">
-          <router-link
-            to="/buy"
-            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Browse Properties
-          </router-link>
+    <!-- Page Header -->
+    <div class="sticky top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-2xl font-bold text-on-surface">My Favorites</h1>
+            <p class="text-on-surface-variant text-sm mt-1">Your collection of saved properties.</p>
         </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      
+      <!-- Loading State -->
+      <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+          <div v-for="i in 3" :key="i" class="bg-surface rounded-xl shadow-md overflow-hidden animate-pulse">
+            <div class="h-56 bg-surface-variant"></div>
+            <div class="p-5">
+              <div class="h-4 bg-surface-variant rounded w-3/4 mb-3"></div>
+              <div class="h-4 bg-surface-variant rounded w-1/2 mb-4"></div>
+              <div class="h-3 bg-surface-variant rounded w-full mb-2"></div>
+              <div class="h-3 bg-surface-variant rounded w-full mb-4"></div>
+              <div class="flex justify-between items-center">
+                <div class="h-6 bg-surface-variant rounded w-1/4"></div>
+                <div class="w-8 h-8 bg-surface-variant rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <!-- No Favorites -->
+      <div v-else-if="!favorites || favorites.length === 0" class="text-center py-20">
+          <div class="w-24 h-24 bg-primary-container text-primary mx-auto rounded-full flex items-center justify-center mb-6">
+            <i class="fas fa-heart-broken text-4xl"></i>
+          </div>
+          <h3 class="text-2xl font-semibold text-on-surface mb-2">No Favorites Yet</h3>
+          <p class="text-on-surface-variant mb-6 max-w-md mx-auto">Start exploring and save your favorite properties to see them here.</p>
+          <router-link to="/search" class="btn-primary">
+            Find Properties
+          </router-link>
       </div>
 
       <!-- Favorites Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          v-for="favorite in favorites"
-          :key="favorite._id"
-          class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
-        >
-          <!-- Property Image -->
-          <div class="relative h-48 bg-gray-200">
-            <img
-              v-if="favorite.property?.images?.[0]"
-              :src="favorite.property.images[0]"
-              :alt="favorite.property.title"
-              class="w-full h-full object-cover"
-            />
-            <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-              <svg class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </div>
-            
-            <!-- Remove Favorite Button -->
-            <button
-              @click="removeFavorite(favorite.property._id)"
-              class="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
-            >
-              <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Property Details -->
-          <div class="p-4">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">
-              {{ favorite.property?.title || 'Untitled Property' }}
-            </h3>
-            <p class="text-gray-600 text-sm mb-2">
-              {{ favorite.property?.location || 'Location not specified' }}
-            </p>
-            <p class="text-blue-600 font-bold text-lg">
-              ₹{{ formatPrice(favorite.property?.price) }}
-            </p>
-            <router-link
-              :to="`/property/${favorite.property?._id}`"
-              class="mt-4 block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              View Details
-            </router-link>
-          </div>
-        </div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+        <PropertyCard 
+          v-for="property in favorites" 
+          :key="property._id" 
+          :property="property" 
+        />
       </div>
-    </div>
+
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useFavoritesStore } from '@/store/favorites'
+import { computed, onMounted } from 'vue'
+import { useFavoriteStore } from '@/store/favorites'
+import PropertyCard from '@/components/PropertyCard.vue'
 
-const favoritesStore = useFavoritesStore()
+const favoriteStore = useFavoriteStore()
 
-const loading = computed(() => favoritesStore.loading)
-const favorites = computed(() => favoritesStore.favorites)
-
-const formatPrice = (price) => {
-  if (!price) return '0'
-  return new Intl.NumberFormat('en-IN').format(price)
-}
-
-const removeFavorite = async (propertyId) => {
-  try {
-    await favoritesStore.removeFromFavorites(propertyId)
-  } catch (error) {
-    console.error('Error removing favorite:', error)
-    alert('Failed to remove favorite. Please try again.')
-  }
-}
+const favorites = computed(() => favoriteStore.favorites)
+const loading = computed(() => favoriteStore.loading)
 
 onMounted(() => {
-  favoritesStore.fetchFavorites()
+  favoriteStore.fetchFavorites()
 })
 </script>
+
+<style scoped>
+.btn-primary {
+    @apply bg-primary text-on-primary font-bold py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:-translate-y-0.5;
+}
+</style>

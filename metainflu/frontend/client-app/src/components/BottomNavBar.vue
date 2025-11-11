@@ -1,21 +1,12 @@
 <template>
   <div class="md:hidden fixed bottom-0 inset-x-0 z-50 pb-3 pt-2">
-    <div class="max-w-sm mx-auto h-16 bg-surface/80 backdrop-blur-sm rounded-full shadow-lg flex justify-evenly items-center px-2">
+    <div class="max-w-sm mx-auto h-16 bg-surface/80 backdrop-blur-sm rounded-full shadow-lg flex justify-around items-center px-2">
       
-      <router-link v-for="item in navItemsLeft" :key="item.path" :to="item.path" class="nav-item" active-class="active">
+      <router-link v-for="item in navItems" :key="item.path" :to="item.path" class="nav-item" active-class="active">
         <i :class="item.icon" class="text-xl transition-transform duration-200"></i>
         <span class="text-[10px] font-medium mt-1">{{ item.name }}</span>
       </router-link>
 
-      <router-link to="/add-property" class="fab">
-        <i class="fas fa-plus text-2xl"></i>
-      </router-link>
-
-      <router-link v-for="item in navItemsRight" :key="item.path" :to="item.path" class="nav-item" active-class="active">
-        <i :class="item.icon" class="text-xl transition-transform duration-200"></i>
-        <span class="text-[10px] font-medium mt-1">{{ item.name }}</span>
-      </router-link>
-      
     </div>
   </div>
 </template>
@@ -23,14 +14,12 @@
 <script setup>
 import { ref } from 'vue';
 
-const navItemsLeft = ref([
+const navItems = ref([
   { name: 'Home', path: '/', icon: 'fas fa-home' },
   { name: 'Explore', path: '/search', icon: 'fas fa-compass' },
-]);
-
-const navItemsRight = ref([
-  { name: 'Favorites', path: '/my-favorites', icon: 'fas fa-heart' },
-  { name: 'Profile', path: '/profile', icon: 'fas fa-user' },
+  { name: 'Messages', path: '/chat', icon: 'fas fa-comment-dots' },
+  { name: 'Alerts', path: '/notifications', icon: 'fas fa-bell' },
+  { name: 'Profile', path: '/user/profile', icon: 'fas fa-user' },
 ]);
 
 </script>
@@ -46,9 +35,5 @@ const navItemsRight = ref([
 
 .nav-item.router-link-exact-active i {
   @apply scale-110;
-}
-
-.fab {
-  @apply w-14 h-14 bg-gradient-to-br from-primary to-primary-variant rounded-full flex items-center justify-center text-on-primary shadow-lg -mt-10 transform transition-transform duration-300 hover:scale-110 hover:rotate-6;
 }
 </style>

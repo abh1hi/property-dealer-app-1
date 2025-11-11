@@ -57,8 +57,19 @@ const router = createRouter({
           name: 'PropertySuccess',
           component: () => import('../pages/property/PropertySuccess.vue'),
           props: true
+        },
+        {
+          path: ':id',
+          name: 'PropertyDetail',
+          component: () => import('../pages/property/PropertyDetail.vue'),
+          props: true
         }
       ]
+    },
+    {
+      path: '/search',
+      name: 'Search',
+      component: () => import('../pages/property/PropertyList.vue')
     },
     // User Routes
     {
@@ -68,6 +79,12 @@ const router = createRouter({
           path: 'profile',
           name: 'UserProfile',
           component: () => import('../pages/user/Profile.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'profile/edit',
+          name: 'EditProfile',
+          component: () => import('../pages/user/EditProfile.vue'),
           meta: { requiresAuth: true }
         },
         {
@@ -81,8 +98,32 @@ const router = createRouter({
           name: 'UserFavorites',
           component: () => import('../pages/user/Favorites.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'chat',
+          name: 'UserChat',
+          component: () => import('../pages/user/Chat.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'notifications',
+          name: 'UserNotifications',
+          component: () => import('../pages/user/Notifications.vue'),
+          meta: { requiresAuth: true }
         }
       ]
+    },
+    {
+        path: '/my-favorites',
+        redirect: '/user/favorites'
+    },
+    {
+        path: '/chat',
+        redirect: '/user/chat'
+    },
+    {
+        path: '/notifications',
+        redirect: '/user/notifications'
     },
     // Category Routes
     {

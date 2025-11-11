@@ -1,75 +1,79 @@
 <template>
-  <div class="property-list-page min-h-screen bg-gray-50">
-    <!-- Page Header -->
-    <div class="bg-white border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 py-6">
-        <h1 class="text-2xl font-bold text-gray-900">Browse Properties</h1>
-        <p class="text-gray-600 mt-1">{{ totalProperties }} properties found</p>
+  <div class="property-list-page min-h-screen bg-background text-on-background">
+    
+    <!-- Sticky Header with Filters -->
+    <div class="sticky top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <FilterBar @filtersChanged="handleFiltersChanged" class="py-3"/>
       </div>
     </div>
 
-    <!-- Filter Bar -->
-    <FilterBar @filtersChanged="handleFiltersChanged" />
-
-    <!-- Property Grid -->
-    <div class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Loading State -->
-      <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="i in 9" :key="i" class="animate-pulse">
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="bg-gray-300 h-48"></div>
-            <div class="p-4">
-              <div class="bg-gray-300 h-4 rounded mb-2"></div>
-              <div class="bg-gray-300 h-4 rounded mb-2"></div>
-              <div class="bg-gray-300 h-4 rounded w-3/4"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- No Results -->
-      <div v-else-if="properties.length === 0" class="text-center py-12">
-        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2L22 12L20 14L12 6L4 14L2 12L12 2M5 15H19V22H5V15Z"/>
-        </svg>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
-        <p class="text-gray-600 mb-4">Try adjusting your search criteria</p>
-        <button 
-          @click="clearFilters"
-          class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          Clear Filters
-        </button>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      
+      <!-- Content Header -->
+      <div class="mb-6">
+        <h1 class="text-3xl font-bold text-on-surface">Find Your Next Home</h1>
+        <p class="text-on-surface-variant mt-1">{{ loading ? 'Searching for properties...' : `${totalProperties} properties found` }}</p>
       </div>
 
       <!-- Property Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <PropertyCard 
-          v-for="property in properties" 
-          :key="property._id" 
-          :property="property" 
-        />
-      </div>
+      <div>
+        <!-- Loading State -->
+        <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+          <div v-for="i in 6" :key="i" class="bg-surface rounded-xl shadow-md overflow-hidden animate-pulse">
+            <div class="h-56 bg-surface-variant"></div>
+            <div class="p-5">
+              <div class="h-4 bg-surface-variant rounded w-3/4 mb-3"></div>
+              <div class="h-4 bg-surface-variant rounded w-1/2 mb-4"></div>
+              <div class="h-3 bg-surface-variant rounded w-full mb-2"></div>
+              <div class="h-3 bg-surface-variant rounded w-full mb-4"></div>
+              <div class="flex justify-between items-center">
+                <div class="h-6 bg-surface-variant rounded w-1/4"></div>
+                <div class="w-8 h-8 bg-surface-variant rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <!-- Load More Button -->
-      <div 
-        v-if="hasMore && !loading" 
-        class="text-center mt-8"
-      >
-        <button 
-          @click="loadMore"
-          :disabled="loadingMore"
-          class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ loadingMore ? 'Loading...' : 'Load More Properties' }}
-        </button>
+        <!-- No Results -->
+        <div v-else-if="properties.length === 0" class="text-center py-20">
+          <div class="w-24 h-24 bg-primary-container text-primary mx-auto rounded-full flex items-center justify-center mb-6">
+            <i class="fas fa-home text-4xl"></i>
+          </div>
+          <h3 class="text-2xl font-semibold text-on-surface mb-2">No Properties Found</h3>
+          <p class="text-on-surface-variant mb-6 max-w-md mx-auto">We couldn't find any properties matching your criteria. Try adjusting your filters for better results.</p>
+          <button @click="clearFilters" class="btn-primary">
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- Property Grid -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+          <PropertyCard 
+            v-for="property in properties" 
+            :key="property._id" 
+            :property="property" 
+          />
+        </div>
+
+        <!-- Load More Button -->
+        <div v-if="hasMore && !loading" class="text-center mt-10">
+          <button 
+            @click="loadMore"
+            :disabled="loadingMore"
+            class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ loadingMore ? 'Loading...' : 'Load More Properties' }}
+          </button>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import PropertyCard from '@/components/PropertyCard.vue'
 import FilterBar from '@/components/FilterBar.vue'
@@ -99,19 +103,15 @@ const clearFilters = () => {
   propertyStore.clearFilters()
 }
 
-// Watch for route changes (e.g., from search)
-watch(() => route.query, () => {
-  // Apply route query parameters as filters
-  const routeFilters = { ...route.query }
-  if (Object.keys(routeFilters).length > 0) {
-    propertyStore.setFilters(routeFilters)
-  }
+// Watch for route changes (e.g., from search) and apply filters
+watch(() => route.query, (query) => {
+  propertyStore.setFilters({ ...query })
 }, { deep: true, immediate: true })
 
-onMounted(() => {
-  // If no route filters, fetch all properties
-  if (Object.keys(route.query).length === 0) {
-    propertyStore.fetchProperties()
-  }
-})
 </script>
+
+<style scoped>
+.btn-primary {
+    @apply bg-primary text-on-primary font-bold py-3 px-8 rounded-full transition duration-300 ease-in-out transform hover:-translate-y-0.5;
+}
+</style>
