@@ -320,23 +320,22 @@ export default {
       
       try {
         const formData = new FormData();
-        
         // Append all form fields
         Object.keys(this.formData).forEach(key => {
           if (key === 'amenities') {
-            formData.append(key, JSON.stringify(this.formData[key]));
+            // FIX: send amenities as array
+            this.formData[key].forEach(amenity => {
+              formData.append('amenities[]', amenity);
+            });
           } else if (this.formData[key] !== null && this.formData[key] !== '') {
             formData.append(key, this.formData[key]);
           }
         });
-        
         // Append images
         this.selectedImages.forEach(image => {
           formData.append('images', image);
         });
-        
         const response = await createProperty(formData);
-        
         if (response.success) {
           this.$router.push({
             name: 'PropertySuccess',
