@@ -10,7 +10,6 @@ const router = createRouter({
       name: 'HomePage',
       component: () => import('../pages/home/HomePage.vue')
     },
-    
     // Authentication Routes
     {
       path: '/auth',
@@ -29,7 +28,6 @@ const router = createRouter({
         }
       ]
     },
-
     // Backward compatibility - keep old auth routes
     {
       path: '/login',
@@ -39,7 +37,6 @@ const router = createRouter({
       path: '/register',
       redirect: '/auth/register'
     },
-
     // Property Routes
     {
       path: '/property',
@@ -54,10 +51,15 @@ const router = createRouter({
           name: 'AddProperty',
           component: () => import('../pages/property/AddProperty.vue'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'success/:id',
+          name: 'PropertySuccess',
+          component: () => import('../pages/property/PropertySuccess.vue'),
+          props: true
         }
       ]
     },
-
     // User Routes
     {
       path: '/user',
@@ -82,7 +84,6 @@ const router = createRouter({
         }
       ]
     },
-
     // Category Routes
     {
       path: '/buy',
@@ -100,14 +101,12 @@ const router = createRouter({
       component: () => import('../pages/property/AddProperty.vue'),
       meta: { requiresAuth: true }
     },
-
     // Keep existing routes for now (until pages are created)
     {
       path: '/contact',
       name: 'Contact',
       component: () => import('../pages/Contact.vue')
     },
-
     // 404 Route
     {
       path: '/:pathMatch(.*)*',
@@ -116,35 +115,6 @@ const router = createRouter({
     }
   ]
 })
-
-// Navigation Guards
-/*
-router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore()
-  
-  // Initialize auth state from localStorage if not already initialized
-  if (!authStore.isAuthenticated && localStorage.getItem('token')) {
-    await authStore.checkAuth()
-  }
-  
-  // Check if route requires authentication
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return next({ path: '/auth/login', query: { redirect: to.fullPath } })
-  }
-  
-  // Check if route requires guest (not authenticated)
-  if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    return next('/')
-  }
-  
-  // Check role-based access
-  if (to.meta.roles && !to.meta.roles.includes(authStore.user?.role)) {
-    return next('/404')
-  }
-  
-  next()
-})
-*/
 
 // Temporarily disable navigation guards for development
 router.beforeEach((to, from, next) => {
