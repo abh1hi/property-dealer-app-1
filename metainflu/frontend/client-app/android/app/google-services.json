@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "317809189734",
+    "project_id": "test1-50da1",
+    "storage_bucket": "test1-50da1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317809189734:android:d72d56a45fa04ebe0a5ea7",
+        "android_client_info": {
+          "package_name": "com.apnaaashiana.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNUQnLKt0S-1OeGooHa816ABGHgvCJbFE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
