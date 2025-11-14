@@ -2,18 +2,119 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
+    
+    // Helper functions for security checks
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+    
+    function isSeller() {
+      return isAuthenticated() && getUserData().role == 'seller';
+    }
+    
+    // Users collection - strict access control
+    match /users/{userId} {
+      // Users can only read/write their own profile
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && isOwner(userId);
+      // Admins can read all user data
+      allow read: if isAdmin();
+      allow update: if isAdmin();
+      // Admins can delete user accounts
+      allow delete: if isAdmin();
+    }
+    
+    // Properties collection - main business logic
+    match /properties/{propertyId} {
+      // Any authenticated user can view properties
+      allow read: if isAuthenticated();
+      
+      // Only authenticated users can create properties
+      allow create: if isAuthenticated() && 
+        request.resource.data.ownerId == request.auth.uid;
+      
+      // Only owner or admin can update/delete properties
+      allow update: if isAuthenticated() && 
+        (isOwner(resource.data.ownerId) || isAdmin());
+      allow delete: if isAuthenticated() && 
+        (isOwner(resource.data.ownerId) || isAdmin());
+      
+      // Subcollection: Property images
+      match /images/{imageId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAuthenticated() && 
+          (isOwner(get(/databases/$(database)/documents/properties/$(propertyId)).data.ownerId) || isAdmin());
+      }
+    }
+    
+    // Chat collection
+    match /chats/{chatId} {
+      // Users can read chats they're part of
+      allow read: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      
+      // Users can create new chats
+      allow create: if isAuthenticated();
+      
+      // Only participants or admin can update
+      allow update: if isAuthenticated() && 
+        (request.auth.uid in resource.data.participants || isAdmin());
+      
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Read messages if you're a chat participant
+        allow read: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        
+        // Create messages if you're a participant
+        allow create: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants && 
+          request.resource.data.senderId == request.auth.uid;
+        
+        // Update/delete only your own messages
+        allow update, delete: if isAuthenticated() && 
+          resource.data.senderId == request.auth.uid;
+      }
+    }
+    
+    // Favorites collection - user-specific
+    match /favorites/{favoriteId} {
+      // Users can only access their own favorites
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Users can create their own favorites
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Users can update/delete their own favorites
+      allow update, delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Admins can manage any favorites
+      allow read, update, delete: if isAdmin();
+    }
+    
+    // Admin audit logs (admin only)
+    match /auditLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Default deny all - no access by default
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 12, 10);
+      allow read, write: if false;
     }
   }
 }
