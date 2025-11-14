@@ -1,0 +1,11 @@
+{
+  "name": "property-dealer-functions",
+  "description": "Firebase Functions for Property Dealer App - Phone Auth Login Feature",
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^4.4.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
