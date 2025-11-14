@@ -1,58 +1,28 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-const express = require("express");
-const cors = require("cors");
-const filesUploadMiddleware = require("./middleware/filesUploadMiddleware");
+/**
+ * Firebase Cloud Functions Main Entry Point
+ * Updated to include Phone Authentication endpoints
+ */
 
-// Initialize Firebase Admin SDK
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin
 admin.initializeApp();
 
-// Create Express app
-const app = express();
+// Import auth functions
+const authFunctions = require('./auth');
 
-// Middleware
-app.use(cors({origin: true}));
-app.use(filesUploadMiddleware); // Use custom file upload middleware
-app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+// Export all auth-related Cloud Functions
+exports.getUserProfile = authFunctions.getUserProfile;
+exports.updateUserProfile = authFunctions.updateUserProfile;
+exports.getUserByPhone = authFunctions.getUserByPhone;
+exports.createCustomToken = authFunctions.createCustomToken;
+exports.deleteUserAccount = authFunctions.deleteUserAccount;
+exports.onUserCreate = authFunctions.onUserCreate;
+exports.onUserDelete = authFunctions.onUserDelete;
 
-// Import routes
-const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
-const propertyRoutes = require("./routes/propertyRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const favoriteRoutes = require("./routes/favoriteRoutes");
-const chatRoutes = require("./routes/chatRoutes");
-const uploadRoutes = require("./routes/uploadRoutes");
-const searchRoutes = require("./routes/searchRoutes");
+// Add your other existing Cloud Functions below
+// Example:
+// const propertyFunctions = require('./property');
+// exports.getProperties = propertyFunctions.getProperties;
 
-// Register routes
-app.use("/auth", authRoutes);
-app.use("/users", userRoutes);
-app.use("/properties", propertyRoutes);
-app.use("/admin", adminRoutes);
-app.use("/favorites", favoriteRoutes);
-app.use("/chat", chatRoutes);
-app.use("/upload", uploadRoutes);
-app.use("/search", searchRoutes);
-
-// Health check route
-app.get("/", (req, res) => {
-    res.status(200).json({
-        message: "Property Dealer API - Firebase Cloud Functions",
-        timestamp: new Date().toISOString(),
-        version: "1.0.0",
-    });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error("Error:", err);
-    res.status(err.status || 500).json({
-        error: err.message || "Internal Server Error",
-    });
-});
-
-// Export the Express app as a Firebase Cloud Function
-// WITHOUT .region() for older firebase-functions versions
-exports.api = functions.https.onRequest(app);
