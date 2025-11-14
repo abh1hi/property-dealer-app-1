@@ -9,44 +9,85 @@
 
 ---
 
+## 📱 **NEW: Phone Authentication Live Testing Available!**
+
+**Branch:** `phone-auth-live-testing` ✨
+
+Test phone authentication with Firebase on the **LIVE backend** (not emulators)!
+
+### Quick Start for Phone Auth Testing:
+
+```bash
+# Clone and checkout the live testing branch
+git clone https://github.com/abh1hi/property-dealer-app-1.git
+cd property-dealer-app-1
+git checkout phone-auth-live-testing
+
+# Run automated setup (Linux/Mac)
+chmod +x setup-live-testing.sh
+./setup-live-testing.sh
+
+# Or for Windows
+setup-live-testing.bat
+```
+
+**📚 Full Testing Guide:** [LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md)
+
+**📞 Test Credentials:**
+- Test Phone: `+919876543210`
+- Test OTP: `123456`
+- Or use your own phone number for real SMS testing
+
+---
+
 ## 🚀 Quick Start
-
-**Branch:** `firebase-migration-complete`
-
-This branch contains the complete Firebase migration with all legacy MongoDB code removed.
 
 ### Prerequisites
 - Node.js v22+
-- Firebase CLI
-- Firebase project with Blaze plan
+- Firebase CLI (`npm install -g firebase-tools`)
+- Firebase project: `apnaashiyanaa-app`
 
-### Get Started
+### Choose Your Path:
 
+#### Option 1: Phone Auth Live Testing (Recommended)
 ```bash
-# Clone and checkout this branch
-git clone https://github.com/abh1hi/property-dealer-app-1.git
-cd property-dealer-app-1
-git checkout firebase-migration-complete
-
-# Follow the setup guide
-cat SETUP_INSTRUCTIONS.md
+git checkout phone-auth-live-testing
+./setup-live-testing.sh  # or setup-live-testing.bat on Windows
+# Follow prompts, then see LIVE_TESTING_GUIDE.md
 ```
 
-**📚 Read the full setup guide:** [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md)
+#### Option 2: Full Development Setup
+```bash
+git checkout main
+cat SETUP_INSTRUCTIONS.md
+```
 
 ---
 
 ## 🎯 Project Status
 
-### Migration Progress: 28% Complete
+### Phone Authentication: ✅ **READY FOR TESTING**
+
+**What's Working:**
+- ✅ Firebase Phone Auth with OTP
+- ✅ Test phone number configuration
+- ✅ Real SMS integration
+- ✅ Cloud Functions for user management
+- ✅ Session persistence
+- ✅ reCAPTCHA protection
+- ✅ Resend OTP functionality
+- ✅ Error handling
+- ✅ Live backend deployment
+
+### Migration Progress: 35% Complete
 
 | Phase | Status | Description |
 |-------|--------|-------------|
 | ✅ Phase 1 | **Complete** | Legacy MongoDB code removed |
 | ✅ Phase 2 | **Complete** | Firebase SDK integrated |
-| 🟡 Phase 3 | **Next** | Firebase project setup |
-| 🔄 Phase 4 | Pending | Local emulator testing |
-| 🔄 Phase 5 | Pending | Comprehensive testing |
+| ✅ Phase 3 | **Complete** | Firebase project setup |
+| ✅ Phase 4 | **Complete** | Phone authentication implemented |
+| 🟡 Phase 5 | **In Progress** | Live testing & validation |
 | 🔄 Phase 6 | Pending | Mobile app testing |
 | 🔄 Phase 7 | Pending | Production deployment |
 
@@ -56,32 +97,38 @@ cat SETUP_INSTRUCTIONS.md
 
 ## 📚 Documentation
 
-### Essential Guides
+### 🆕 **Start Here:**
 
-1. **[SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md)**  
+1. **[LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md)** ⭐  
+   **Complete guide for testing phone authentication on live Firebase**
+
+2. **[PHONE_AUTH_README.md](./PHONE_AUTH_README.md)**  
+   Phone authentication setup and implementation details
+
+### Essential Guides:
+
+3. **[SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md)**  
    Complete step-by-step setup guide for developers
 
-2. **[FIREBASE_MIGRATION_STATUS.md](./FIREBASE_MIGRATION_STATUS.md)**  
+4. **[FIREBASE_MIGRATION_STATUS.md](./FIREBASE_MIGRATION_STATUS.md)**  
    Migration progress tracking and next steps
 
-3. **[PHASE_1_2_COMPLETE.md](./PHASE_1_2_COMPLETE.md)**  
-   Summary of completed phases
-
-4. **[FIREBASE_IMPLEMENTATION_GUIDE.md](./FIREBASE_IMPLEMENTATION_GUIDE.md)**  
+5. **[FIREBASE_IMPLEMENTATION_GUIDE.md](./FIREBASE_IMPLEMENTATION_GUIDE.md)**  
    Detailed Firebase implementation guide
 
-5. **[FIREBASE_PRICING_BREAKDOWN.md](./FIREBASE_PRICING_BREAKDOWN.md)**  
+6. **[FIREBASE_PRICING_BREAKDOWN.md](./FIREBASE_PRICING_BREAKDOWN.md)**  
    Cost analysis and optimization strategies
 
 ---
 
-## 🏗️ Architecture
+## 🏛️ Architecture
 
 ### Backend - Firebase Cloud Functions
 
 ```
 metainflu/backend/functions/
 ├── index.js              # Main Cloud Function entry
+├── auth.js               # Phone auth functions ✨
 ├── config/
 │   └── firestore.js      # Firestore configuration
 ├── models/
@@ -98,10 +145,16 @@ metainflu/backend/functions/
 metainflu/frontend/client-app/
 ├── src/
 │   ├── config/
-│   │   └── firebase.js   # Firebase SDK setup
+│   │   └── firebase.js   # Firebase SDK setup (with env support) ✨
+│   ├── composables/
+│   │   └── usePhoneAuth.js # Phone auth composable ✨
+│   ├── pages/
+│   │   └── PhoneAuth.vue  # Phone auth UI ✨
+│   ├── utils/
+│   │   ├── phoneValidation.js # Phone validation ✨
+│   │   └── authGuard.js  # Route protection ✨
 │   ├── services/         # API & Firebase services
 │   ├── components/       # Vue components
-│   ├── pages/            # Page views
 │   └── store/            # Pinia store
 └── android/              # Capacitor Android
 ```
@@ -112,11 +165,13 @@ metainflu/frontend/client-app/
 
 ### ✅ Implemented
 
-- **Authentication**
-  - Phone OTP (Firebase Phone Auth)
+- **Authentication** 🔥
+  - **Phone OTP (Firebase Phone Auth)** ⭐ **NEW - LIVE TESTING READY**
   - Aadhaar + Password
   - Dual authentication system
   - Role-based access (buyer/seller/admin)
+  - Session persistence
+  - reCAPTCHA protection
 
 - **Property Management**
   - Create listings with multiple images
@@ -140,14 +195,16 @@ metainflu/frontend/client-app/
 - **Backend**
   - ✅ Cloud Functions for API
   - ✅ Firestore for database
-  - ✅ Firebase Auth
+  - ✅ Firebase Auth (Phone + Aadhaar)
   - ✅ Firebase Storage
   - ✅ Security rules configured
+  - ✅ Phone auth Cloud Functions deployed
 
 - **Frontend**
   - ✅ Firebase SDK integrated
-  - ⚠️ Environment setup needed
-  - ⚠️ API endpoints update needed
+  - ✅ Environment variables support
+  - ✅ Phone auth UI implemented
+  - ✅ Live/Emulator switching
 
 ---
 
@@ -167,26 +224,27 @@ metainflu/frontend/client-app/
 - **Platform:** Firebase Cloud Functions
 - **Database:** Cloud Firestore
 - **Storage:** Firebase Storage
-- **Auth:** Firebase Authentication
+- **Auth:** Firebase Authentication (Phone + Custom)
 
 ### DevOps
 - **Hosting:** Firebase Hosting
 - **CI/CD:** Firebase CLI
-- **Testing:** Firebase Emulators
+- **Testing:** Firebase Emulators + Live Backend
 - **Monitoring:** Firebase Console
 
 ---
 
 ## 💰 Cost Estimate
 
-### Development (0-1K users)
-**~₹623/month**
-- Mostly within free tier
-- Only SMS charges for phone auth
+### Development/Testing (Phone Auth)
+- **Test Phone Numbers:** FREE (no SMS sent)
+- **Real SMS Testing:** ~₹0.01-0.02 per OTP
+- **Cloud Functions:** FREE tier (125K invocations/month)
+- **Firestore:** FREE tier (50K reads/day)
 
 ### Production (1K-10K users)
 **~₹1,296/month** (with optimizations)
-- Phone Auth with MSG91: ₹150/month
+- Phone Auth SMS: ₹150/month
 - Firestore: ₹496/month
 - Storage: ₹470/month
 - Cloud Functions: ₹180/month
@@ -195,79 +253,97 @@ metainflu/frontend/client-app/
 
 ---
 
-## 🚀 Local Development
+## 🧪 Testing Phone Authentication
 
-### 1. Install Dependencies
-
-```bash
-# Backend
-cd metainflu/backend/functions
-npm install
-
-# Frontend
-cd metainflu/frontend/client-app
-npm install
-```
-
-### 2. Start Firebase Emulators
+### Quick Test (2 minutes):
 
 ```bash
+# 1. Checkout testing branch
+git checkout phone-auth-live-testing
+
+# 2. Run setup script
+./setup-live-testing.sh  # Linux/Mac
+# or
+setup-live-testing.bat  # Windows
+
+# 3. Deploy functions (first time only)
 cd metainflu/backend
-firebase emulators:start
+firebase deploy --only functions
+
+# 4. Start frontend
+cd ../frontend/client-app
+npm run dev
+
+# 5. Open browser
+# http://localhost:5173/auth
+
+# 6. Test login
+# Phone: 9876543210
+# OTP: 123456
 ```
 
-### 3. Start Frontend Dev Server
+**📖 Detailed instructions:** [LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md)
+
+---
+
+## 🖥️ Local Development
+
+### With Live Firebase Backend:
 
 ```bash
+# 1. Setup environment
 cd metainflu/frontend/client-app
+cp .env.example .env
+# Edit .env: Set VITE_USE_EMULATORS=false
+
+# 2. Install & start
+npm install
 npm run dev
 ```
 
-### 4. Access Application
+### With Firebase Emulators:
 
-- **Frontend:** http://localhost:5173
-- **Emulator UI:** http://localhost:4000
-- **API:** http://localhost:5001
+```bash
+# 1. Setup environment  
+cp .env.example .env
+# Edit .env: Set VITE_USE_EMULATORS=true
+
+# 2. Start emulators
+cd metainflu/backend
+firebase emulators:start
+
+# 3. Start frontend (new terminal)
+cd metainflu/frontend/client-app
+npm run dev
+```
 
 ---
 
 ## 📦 Deployment
 
-### Prerequisites
-- Firebase project created
-- Blaze plan enabled
-- Firebase CLI installed and logged in
-
-### Deploy Commands
+### Deploy Backend Functions:
 
 ```bash
 cd metainflu/backend
-
-# Deploy everything
-firebase deploy
-
-# Or deploy selectively
+firebase login
+firebase use apnaashiyanaa-app
 firebase deploy --only functions
-firebase deploy --only hosting
-firebase deploy --only firestore:rules
-firebase deploy --only storage:rules
 ```
 
----
+### Deploy Frontend:
 
-## 🧪 Testing
-
-### Manual Testing
-1. Start emulators (see Local Development)
-2. Test authentication flows
-3. Create/edit/delete properties
-4. Upload images
-5. Test user profiles
-
-### Automated Testing
 ```bash
-# Coming soon
-# npm test
+cd metainflu/frontend/client-app
+npm run build
+cd ../../backend
+firebase deploy --only hosting
+```
+
+### Deploy Everything:
+
+```bash
+cd metainflu/backend
+firebase deploy
 ```
 
 ---
@@ -278,14 +354,8 @@ firebase deploy --only storage:rules
 
 ```bash
 cd metainflu/frontend/client-app
-
-# Build
 npm run build
-
-# Sync
 npx cap sync android
-
-# Open in Android Studio
 npx cap open android
 ```
 
@@ -301,8 +371,9 @@ npx cap open ios
 
 ## 🔗 Important Links
 
-- **Firebase Console:** https://console.firebase.google.com
+- **Firebase Console:** https://console.firebase.google.com/project/apnaashiyanaa-app
 - **Firebase Docs:** https://firebase.google.com/docs
+- **Phone Auth Docs:** https://firebase.google.com/docs/auth/web/phone-auth
 - **Vue.js Docs:** https://vuejs.org
 - **Capacitor Docs:** https://capacitorjs.com/docs
 - **Repository:** https://github.com/abh1hi/property-dealer-app-1
@@ -321,28 +392,35 @@ This project is private and proprietary.
 
 ---
 
-## 🎓 Next Steps
+## 🎯 Next Steps
 
-1. **Create Firebase Project**
-   - Go to Firebase Console
-   - Create new project
-   - Upgrade to Blaze plan
+### For Phone Auth Testing:
+1. ✅ **Checkout testing branch:** `git checkout phone-auth-live-testing`
+2. ✅ **Run setup script:** `./setup-live-testing.sh`
+3. ✅ **Deploy functions:** `firebase deploy --only functions`
+4. ✅ **Start testing:** See [LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md)
 
-2. **Configure Environment**
-   - Copy `.env.example` to `.env`
-   - Add Firebase config values
-
-3. **Start Testing**
-   - Follow SETUP_INSTRUCTIONS.md
-   - Test with emulators
-   - Deploy when ready
-
----
-
-**Status:** 🟢 Ready for Phase 3 (Firebase Project Setup)  
-**Branch:** `firebase-migration-complete`  
-**Last Updated:** November 10, 2025
+### For Full Development:
+1. **Configure Environment:** Copy `.env.example` to `.env`
+2. **Install Dependencies:** `npm install` in frontend and backend
+3. **Start Development:** Follow [SETUP_INSTRUCTIONS.md](./SETUP_INSTRUCTIONS.md)
+4. **Test Features:** Authentication, properties, user profiles
+5. **Deploy:** When ready, deploy to Firebase
 
 ---
 
-**Happy Building! 🎉**
+**Status:** 🟢 **Phone Auth Ready for Live Testing!**  
+**Testing Branch:** `phone-auth-live-testing`  
+**Main Branch:** `main`  
+**Last Updated:** November 14, 2025
+
+---
+
+**🎉 Start Testing Phone Auth Now!**
+
+```bash
+git checkout phone-auth-live-testing
+./setup-live-testing.sh
+```
+
+See [LIVE_TESTING_GUIDE.md](./LIVE_TESTING_GUIDE.md) for detailed instructions.
